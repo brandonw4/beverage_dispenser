@@ -36,6 +36,7 @@ double convertToScaleUnit(double oz);
 void decisionTree(char keyVal);
 void createBeverage(double oz1, double oz2, double oz3, String bevName);
 void runMotor(bool motor, int motorNum);
+void dispenseShot(int motor, String bottleName);
 
 //init drinks
 String drink1Name = "TEST DRINK 1";
@@ -116,11 +117,12 @@ void loop() {
   printReadyMsg = false; //prevent spamming of lcd, after it has printed once
   //keypad input
   char keypadIn = customKeypad.getKey();
-  if (keypadIn) {
-    Serial.println(keypadIn);
-  }
   decisionTree(keypadIn);
-  Serial.println("shouldnt print");
+
+  if (cellDataCall) {     //diagnostic: prints scale data to serial console. Controlled by C on, D off.
+    Serial.println(LoadCell.getData());
+  }
+
 
 }
 
@@ -142,7 +144,6 @@ void dispense(double oz, int motorNum) {
       //Serial.println(LoadCell.getData());
       currentDispense = LoadCell.getData();
       
-      //not working
       if (customKeypad.getKey() == '#') {
         Serial.println("##!CANCELLED!##");
         lcd.clear();
@@ -186,7 +187,7 @@ void dispense(double oz, int motorNum) {
   }
 
 void createBeverage(double oz1, double oz2, double oz3, String bevName) {
-  if (LoadCell.getData() < 10) {
+  if (LoadCell.getData() < 4) {
         Serial.println("No cup detected. Please place cup and try again.");
         lcd.clear();
         lcd.println("No cup detected.");
@@ -285,6 +286,26 @@ void decisionTree(char keyVal) {
     else if (keyVal == '6') {
       createBeverage(d6oz1, d6oz2, d6oz3, drink6Name);
     }
+    //dispense shot of bottle 1
+    else if (keyVal == '7') {
+      dispenseShot(1, bottle1Name);
+    }
+    //dispense shot of bottle 2
+    else if (keyVal == '8') {
+      dispenseShot(1, bottle2Name);
+    }
+    //dispense shot of bottle 3
+    else if (keyVal == '9') {
+      dispenseShot(1, bottle3Name);
+    }
+    else if (keyVal == 'C') {   //cellDataCall controls print data to console variable
+      cellDataCall = true;
+    }
+    else if (keyVal == 'D') {
+      cellDataCall = false;
+    }
+    
+
 
       
     
@@ -300,7 +321,36 @@ void decisionTree(char keyVal) {
     
   }
   
-  void runMotor(bool motorRun, int motorNum) { //implementation of motor controller, motor 4 does not exist but results in a full shutdown of all 3 regardless of bool
+void dispenseShot(int motor, String bottleName) {
+  if (LoadCell.getData() < 1) {   //number is smaller due to small plastic solo shot cups
+        Serial.println("No cup detected. Please place cup and try again.");
+        lcd.clear();
+        lcd.println("No cup detected.");
+        lcd.setCursor(0,1);
+        lcd.println("Please try again.");
+        delay(1700);
+        printReadyMsg = true;
+        return;
+      }
+  lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Dispensing 1.5oz shot of " + bottleName);
+    lcd.setCursor(0,1);
+    lcd.println("# key to cancel.");
+    delay(1500);
+  dispense(1.5, motor);
+
+  lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Enjoy");
+    lcd.setCursor(0, 1);
+    lcd.print("responsibly!");
+  runMotor(false, 4); //make sure all 3 motors are off
+  delay(3000);  
+  printReadyMsg = true;
+}
+  
+void runMotor(bool motorRun, int motorNum) { //implementation of motor controller, motor 4 does not exist but results in a full shutdown of all 3 regardless of bool
     if(motorNum == 1) {
       if (motorRun) {
         digitalWrite(2, HIGH);
