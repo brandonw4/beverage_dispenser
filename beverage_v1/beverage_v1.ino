@@ -180,6 +180,7 @@ void createBeverage(double oz1, double oz2, double oz3, String bevName) {
         lcd.println("No cup detected.");
         lcd.setCursor(0,1);
         lcd.println("Please try again.");
+        delay(1700);
         printReadyMsg = true;
         return;
       }
