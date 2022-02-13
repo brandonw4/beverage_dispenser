@@ -50,6 +50,18 @@ String drink3Name = "dr3";
 double d3oz1 = 1.5;
 double d3oz2 = 1;
 double d3oz3 = 1;
+String drink4Name = "dr4";
+double d4oz1 = 1.5;
+double d4oz2 = 1;
+double d4oz3 = 1;
+String drink5Name = "dr5";
+double d5oz1 = 1.5;
+double d5oz2 = 1;
+double d5oz3 = 1;
+String drink6Name = "dr5";
+double d6oz1 = 1.5;
+double d6oz2 = 1;
+double d6oz3 = 1;
 
 //bottles
 String bottle1Name = "Vodka";
@@ -251,35 +263,30 @@ void decisionTree(char keyVal) {
 
     //dispense drink 1
     if (keyVal == '1') {
-      // if (LoadCell.getData() < 10) {
-      //   Serial.println("No cup detected. Please place cup and try again.");
-      //   lcd.clear();
-      //   lcd.println("No cup detected.");
-      //   lcd.setCursor(0,1);
-      //   lcd.println("Please try again.");
-      // }
-      // else {
-      //   createBeverage(d1oz1, d1oz2, d1oz3, drink1Name);
-      // }
       createBeverage(d1oz1, d1oz2, d1oz3, drink1Name);
-      
     }
     //dispense drink 2
     else if (keyVal == '2') {
-      if (LoadCell.getData() < 10) {
-        Serial.println("No cup detected. Please place cup and try again.");
-        lcd.clear();
-        lcd.println("No cup detected.");
-        lcd.setCursor(0,1);
-        lcd.println("Please try again.");
-      }
-      else {
-        createBeverage(d2oz1, d2oz2, d2oz3, drink2Name);
-      }
-      
-      
+      createBeverage(d2oz1, d2oz2, d2oz3, drink2Name);
     }
-    
+    //dispense drink 3
+    else if (keyVal == '3') {
+      createBeverage(d3oz1, d3oz2, d3oz3, drink3Name);
+    }
+    //dispense drink 4
+    else if (keyVal == '4') {
+      createBeverage(d4oz1, d4oz2, d4oz3, drink4Name);
+    }
+    //dispense drink 5
+    else if (keyVal == '5') {
+      createBeverage(d5oz1, d5oz2, d5oz3, drink5Name);
+    }
+    //dispense drink 6
+    else if (keyVal == '6') {
+      createBeverage(d6oz1, d6oz2, d6oz3, drink6Name);
+    }
+
+      
     
     else if (keyVal == '#') {
       lcd.clear();
