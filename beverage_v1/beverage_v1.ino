@@ -334,10 +334,11 @@ void dispenseShot(int motor, String bottleName) {
       }
   lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print("Dispensing 1.5oz shot of " + bottleName);
+    //lcd.print("Dispensing 1.5oz shot of " + bottleName);
+    lcd.print("Shot of " + bottleName);
     lcd.setCursor(0,1);
     lcd.println("# key to cancel.");
-    delay(1500);
+  delay(1500);
   dispense(1.5, motor);
 
   lcd.clear();
