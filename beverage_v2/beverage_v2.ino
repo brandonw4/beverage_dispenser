@@ -2,6 +2,7 @@
 #include <HX711_ADC.h>
 #include <Keypad.h>
 #include <LiquidCrystal.h>
+#include 'bev_func.h'
 
 //LCD Display
 const int rs = 7, en = 8, d4 = 9, d5 = 10, d6 = 11, d7 = 12;
