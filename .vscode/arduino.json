@@ -1,5 +1,6 @@
 {
     "configuration": "cpu=atmega2560",
     "board": "arduino:avr:mega",
-    "sketch": "beverage_v1/beverage_v1.ino"
+    "sketch": "beverage_v1/beverage_v1.ino",
+    "programmer": "arduino:avrispmkii"
 }
