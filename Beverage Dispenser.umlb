@@ -1,10 +1,10 @@
 {"_id":"1Gs96ndWfUbhZcWL","name":"double","kind":"StandardType","visibility":"public"}
-{"_id":"3xb1YatifluZtu02","isAbstract":false,"isFinal":false,"isInterface":false,"visibility":"public","diagramId":"j1Ilee1s4mEa85Cm","name":"Scale","kind":"Class","position":{"x":929.5,"y":221},"discriminator":"Class","stereotypes":[]}
+{"_id":"3xb1YatifluZtu02","isAbstract":false,"isFinal":false,"isInterface":false,"visibility":"public","diagramId":"j1Ilee1s4mEa85Cm","name":"Scale","kind":"Class","position":{"x":901.5,"y":648},"discriminator":"Class","stereotypes":[]}
 {"_id":"4eprYNvA4GlDrGDT","name":"status","isAbstract":false,"type":"9fY2qUttb4FqMFXZ","isReadOnly":false,"visibility":"public","isStatic":false,"classifierId":"9GzIdsbxpkAZXFbX","discriminator":"Property","kind":"Property","index":0}
 {"_id":"7L73VwATzw8VDUdd","name":"int","kind":"StandardType","visibility":"public"}
 {"_id":"7WCfpC1OA9S6WVTx","name":"any","kind":"StandardType","visibility":"public"}
 {"methodId":"PZVa6Js6VZ24f2pZ","name":"oz","type":"1Gs96ndWfUbhZcWL","kind":"Parameter","discriminator":"Parameter","visibility":"public","index":0,"_id":"99TTLcjRMjJUOOJF"}
-{"_id":"9GzIdsbxpkAZXFbX","isAbstract":false,"isFinal":false,"isInterface":false,"visibility":"public","diagramId":"j1Ilee1s4mEa85Cm","name":"Pump","kind":"Class","position":{"x":245.5,"y":403},"discriminator":"Class","stereotypes":[]}
+{"_id":"9GzIdsbxpkAZXFbX","isAbstract":false,"isFinal":false,"isInterface":false,"visibility":"public","diagramId":"j1Ilee1s4mEa85Cm","name":"Pump","kind":"Class","position":{"x":253.5,"y":605},"discriminator":"Class","stereotypes":[]}
 {"_id":"9fY2qUttb4FqMFXZ","name":"boolean","kind":"StandardType","visibility":"public"}
 {"_id":"BKjzsBav0PrhrYhY","name":"time","kind":"StandardType","visibility":"public"}
 {"_id":"DhHV6cwJYZho53ni","name":"name","isAbstract":false,"type":"SWq09fbog4E56pwF","isReadOnly":false,"visibility":"public","isStatic":false,"classifierId":"caAyB2duvI47XDad","discriminator":"Property","kind":"Property","index":1}
@@ -12,10 +12,14 @@
 {"_id":"OO5SIkslbYPnvRIg","name":"control","isAbstract":false,"type":"eEQa4qCHLLCyxdNF","visibility":"public","isStatic":false,"classifierId":"9GzIdsbxpkAZXFbX","discriminator":"Method","kind":"Method","index":0,"parameters":[]}
 {"_id":"PZVa6Js6VZ24f2pZ","name":"dispense","isAbstract":false,"type":"eEQa4qCHLLCyxdNF","visibility":"public","isStatic":false,"classifierId":"caAyB2duvI47XDad","discriminator":"Method","kind":"Method","index":0,"parameters":[]}
 {"_id":"PqklbRdMNpU4Clha","name":"calibrate","isAbstract":false,"type":"eEQa4qCHLLCyxdNF","visibility":"public","isStatic":false,"classifierId":"3xb1YatifluZtu02","discriminator":"Method","kind":"Method","index":0,"parameters":[]}
+{"_id":"QNerCcAyXvDWm0Cs","isAbstract":false,"isFinal":false,"isInterface":false,"visibility":"public","diagramId":"j1Ilee1s4mEa85Cm","name":"UserInput","kind":"Class","position":{"x":1053.5,"y":114},"discriminator":"Class","stereotypes":[]}
+{"_id":"ST2iIQp008yqBWls","name":"dispenseShot","isAbstract":false,"type":"eEQa4qCHLLCyxdNF","visibility":"public","isStatic":false,"classifierId":"caAyB2duvI47XDad","discriminator":"Method","kind":"Method","index":1,"parameters":[]}
 {"_id":"SWq09fbog4E56pwF","name":"string","kind":"StandardType","visibility":"public"}
+{"_id":"Uz8Ca86qHlFRGbxA","name":"getWeight","isAbstract":false,"type":"1Gs96ndWfUbhZcWL","visibility":"public","isStatic":false,"classifierId":"3xb1YatifluZtu02","discriminator":"Method","kind":"Method","index":1,"parameters":[]}
 {"_id":"XTaosYyAhazDWKFj","name":"remaining","isAbstract":false,"type":"1Gs96ndWfUbhZcWL","isReadOnly":false,"visibility":"public","isStatic":false,"classifierId":"caAyB2duvI47XDad","discriminator":"Property","kind":"Property","index":3}
 {"_id":"b484LCMe8A5bnGDv","name":"pump","isAbstract":false,"type":"9GzIdsbxpkAZXFbX","isReadOnly":false,"visibility":"public","isStatic":false,"classifierId":"caAyB2duvI47XDad","discriminator":"Property","kind":"Property","index":0}
-{"_id":"caAyB2duvI47XDad","isAbstract":false,"isFinal":false,"isInterface":false,"visibility":"public","diagramId":"j1Ilee1s4mEa85Cm","name":"Mixer","kind":"Class","position":{"x":599.5,"y":351},"discriminator":"Class","stereotypes":[]}
+{"_id":"caAyB2duvI47XDad","isAbstract":false,"isFinal":false,"isInterface":false,"visibility":"public","diagramId":"j1Ilee1s4mEa85Cm","name":"Mixer","kind":"Class","position":{"x":598.5,"y":217},"discriminator":"Class","stereotypes":[]}
+{"_id":"dsTvXRpeL0RUAYPH","name":"uses","sourceId":"caAyB2duvI47XDad","targetId":"3xb1YatifluZtu02","diagramId":"j1Ilee1s4mEa85Cm","visibility":"public","kind":"Relationship","relationshipKind":"Usage"}
 {"_id":"eEQa4qCHLLCyxdNF","name":"void","kind":"StandardType","visibility":"public"}
 {"_id":"fmBdFEE7vO0JjA3Y","name":"capacity","isAbstract":false,"type":"1Gs96ndWfUbhZcWL","isReadOnly":false,"visibility":"public","isStatic":false,"classifierId":"caAyB2duvI47XDad","discriminator":"Property","kind":"Property","index":2}
 {"_id":"j0u2M6Th1Vdn75r0","name":"date","kind":"StandardType","visibility":"public"}
@@ -24,7 +28,7 @@
 {"_id":"lZ9pRpVVyLA8mNV1","name":"mixers[6]","isAbstract":false,"type":"caAyB2duvI47XDad","isReadOnly":false,"visibility":"public","isStatic":false,"classifierId":"L2JMBZqyS1iZvvM5","discriminator":"Property","kind":"Property","index":1}
 {"_id":"mud8f98YCHBJf9FM","name":"isEmpty","isAbstract":false,"type":"9fY2qUttb4FqMFXZ","isReadOnly":false,"visibility":"public","isStatic":false,"classifierId":"caAyB2duvI47XDad","discriminator":"Property","kind":"Property","index":4}
 {"_id":"pZbejqP9PhYr7kj5","name":"uses","sourceId":"caAyB2duvI47XDad","targetId":"9GzIdsbxpkAZXFbX","diagramId":"j1Ilee1s4mEa85Cm","visibility":"public","kind":"Relationship","relationshipKind":"Usage"}
-{"_id":"uZ3WeVG4L0tLCYZ4","isAbstract":false,"isFinal":false,"isInterface":false,"visibility":"public","diagramId":"j1Ilee1s4mEa85Cm","name":"Notification","kind":"Class","position":{"x":1058.5,"y":113},"discriminator":"Class","stereotypes":[]}
+{"_id":"uZ3WeVG4L0tLCYZ4","isAbstract":false,"isFinal":false,"isInterface":false,"visibility":"public","diagramId":"j1Ilee1s4mEa85Cm","name":"Notification","kind":"Class","position":{"x":873.5,"y":113},"discriminator":"Class","stereotypes":[]}
 {"_id":"vOMzi7IXWntk71P8","name":"name","isAbstract":false,"type":"SWq09fbog4E56pwF","isReadOnly":false,"visibility":"public","isStatic":false,"classifierId":"L2JMBZqyS1iZvvM5","discriminator":"Property","kind":"Property","index":0}
 {"_id":"vWI4ZrdgInReW8X8","name":"char","kind":"StandardType","visibility":"public"}
 {"_id":"wJH4AgsLRmq7mk93","name":"has","sourceId":"L2JMBZqyS1iZvvM5","targetId":"caAyB2duvI47XDad","diagramId":"j1Ilee1s4mEa85Cm","visibility":"public","kind":"Relationship","relationshipKind":"Aggregation"}
