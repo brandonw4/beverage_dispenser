@@ -2,6 +2,10 @@
 #include <HX711_ADC.h>
 #include <Keypad.h>
 #include <LiquidCrystal.h>
+#include "beverage.h"
+#include "scale.h"
+#include "pump.h"
+
 
 //LCD Display
 const int rs = 7, en = 8, d4 = 9, d5 = 10, d6 = 11, d7 = 12;
@@ -14,7 +18,8 @@ bool printReadyMsg = true; //used to prevent the loop function from spamming lcd
 HX711_ADC LoadCell(22, 23); 
 long t;
 bool cellDataCall = false;
-const double SCALE_OZ_FACTOR = 20.525;
+const double SCALE_OZ_FACTOR = 20.525; 
+
 
 //4x4 Keypad
 const byte ROWS = 4; 
