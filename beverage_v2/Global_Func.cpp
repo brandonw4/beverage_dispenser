@@ -1,62 +1,6 @@
-//Libraries
-#include "beverage.h"
-#include "pump.h"
 #include "GlobalFunc.h"
 
 
-void setup() {
-  Serial.begin(9600); 
-
-//LCD control
-lcd.begin(16, 2);
-  lcd.print("Untitled v2");
-  lcd.setCursor(0,1);
-  lcd.print("Brandon Wortman");
-  delay(2000);
-
-//load cell
-float calValue = 696;   //calibration value
-LoadCell.begin(9600);
-lcd.clear();
-lcd.setCursor(0,0);
-lcd.print("CLEAR THE SCALE!");
-lcd.setCursor(0,1);
-lcd.print("Calibrating....!");
-delay(5000);
-LoadCell.start(2000); //tare precision, can be more precise by adding more seconds of stabilization time
-LoadCell.setCalFactor(calValue);
-
-
-//LED control
-  //temp leds for motor
-  pinMode(2, OUTPUT); //red 2
-  pinMode(3, OUTPUT); //blue 3
-  pinMode(4, OUTPUT); //yellow 4
-  
-
-
-}
-
-void loop() {
-  LoadCell.update();
-  if (printReadyMsg) {   //purpose explanation with declaration
-    lcd.clear();
-      lcd.setCursor(0,0);
-      lcd.print("Place empty cup,");
-      lcd.setCursor(0,1);
-      lcd.print("make selection.");
-  }
-  printReadyMsg = false; //prevent spamming of lcd, after it has printed once
-  //keypad input
-  char keypadIn = customKeypad.getKey();
-  decisionTree(keypadIn);
-
-  if (cellDataCall) {     //diagnostic: prints scale data to serial console. Controlled by C on, D off.
-    Serial.println(LoadCell.getData());
-  }
-
-
-}
 
 void dispense(double oz, int motorNum) {
     
@@ -328,5 +272,3 @@ void runMotor(bool motorRun, int motorNum) { //implementation of motor controlle
 
     
   }
-  
-
