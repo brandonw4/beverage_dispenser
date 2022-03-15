@@ -5,9 +5,10 @@
 
 class Beverage {
     public:
-        Beverage(String name, Mixer mixers[]);
+        Beverage(String name, Mixer ms[6]);
         String name;
-        Mixer mixers[];
+        Mixer mixers[6];
+        
 };
 
 #endif
