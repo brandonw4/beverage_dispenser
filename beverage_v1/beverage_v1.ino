@@ -3,6 +3,34 @@
 #include <Keypad.h>
 #include <LiquidCrystal.h>
 
+//Beverage Class
+const int maxMixers = 6; //size of mixer arrays
+class Beverage {
+    public:
+    Beverage(String n, double oz1, double oz2, double oz3, double oz4, double oz5, double oz6);
+    Beverage(String n, double oz1, double oz2, double oz3);
+    double ozArr[maxMixers];
+    String name;
+};
+
+Beverage::Beverage(String n, double oz1, double oz2, double oz3) {
+  name = n;
+  ozArr[0] = oz1;
+  ozArr[1] = oz2;
+  ozArr[2] = oz3;
+}
+
+Beverage::Beverage(String n, double oz1, double oz2, double oz3, double oz4, double oz5, double oz6){
+  name = n;
+  ozArr[0] = oz1;
+  ozArr[1] = oz2;
+  ozArr[2] = oz3;
+  ozArr[3] = oz4;
+  ozArr[4] = oz5;
+  ozArr[5] = oz6;
+}
+
+
 //LCD Display
 const int rs = 7, en = 8, d4 = 9, d5 = 10, d6 = 11, d7 = 12;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
@@ -39,6 +67,8 @@ void runMotor(bool motor, int motorNum);
 void dispenseShot(int motor, String bottleName);
 
 //init drinks
+Beverage bev1("testDrink1", 1.5, 1.5, 1.5);
+
 String drink1Name = "TEST DRINK 1";
 double d1oz1 = 1.5;
 double d1oz2 = 1.5;
