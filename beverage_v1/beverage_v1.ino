@@ -202,7 +202,6 @@ void dispense(double oz, int motorNum) {
   }
 
 void createBeverage(Beverage bev) {
-//void createBeverage(double oz1, double oz2, double oz3, String bevName) {
   if (LoadCell.getData() < 4) {
         Serial.println("No cup detected. Please place cup and try again.");
         lcd.clear();
