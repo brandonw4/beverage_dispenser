@@ -62,42 +62,27 @@ void(* resetFunc) (void) = 0; //reboot function
 void dispense(double oz, int motorNum);
 double convertToScaleUnit(double oz);
 void decisionTree(char keyVal);
-void createBeverage(double oz1, double oz2, double oz3, String bevName);
+void createBeverage(Beverage bev);
 void runMotor(bool motor, int motorNum);
 void dispenseShot(int motor, String bottleName);
 
 //init drinks
 Beverage bev1("testDrink1", 1.5, 1.5, 1.5);
+Beverage bev2("testDrink2", 1.5, 1.5, 1.5);
+Beverage bev3("testDrink3", 1.5, 1.5, 1.5);
+Beverage bev4("testDrink4", 1.5, 1.5, 1.5);
+Beverage bev5("testDrink5", 1.5, 1.5, 1.5);
+Beverage bev6("testDrink6", 1.5, 1.5, 1.5);
 
-String drink1Name = "TEST DRINK 1";
-double d1oz1 = 1.5;
-double d1oz2 = 1.5;
-double d1oz3 = 1.5;
-String drink2Name = "dr2";
-double d2oz1 = 1.5;
-double d2oz2 = 1;
-double d2oz3 = 1;
-String drink3Name = "dr3";
-double d3oz1 = 1.5;
-double d3oz2 = 1;
-double d3oz3 = 1;
-String drink4Name = "dr4";
-double d4oz1 = 1.5;
-double d4oz2 = 1;
-double d4oz3 = 1;
-String drink5Name = "dr5";
-double d5oz1 = 1.5;
-double d5oz2 = 1;
-double d5oz3 = 1;
-String drink6Name = "dr5";
-double d6oz1 = 1.5;
-double d6oz2 = 1;
-double d6oz3 = 1;
 
 //bottles
-String bottle1Name = "Vodka";
-String bottle2Name = "Rum";
-String bottle3Name = "Fireball";
+const String bottle1Name = "b1Name";
+const String bottle2Name = "b2Name";
+const String bottle3Name = "b3Name";
+const String bottle4Name = "b4Name";
+const String bottle5Name = "b5Name";
+const String bottle6Name = "b6Name";
+
 
 
 
@@ -216,7 +201,8 @@ void dispense(double oz, int motorNum) {
     return oz * SCALE_OZ_FACTOR;
   }
 
-void createBeverage(double oz1, double oz2, double oz3, String bevName) {
+void createBeverage(Beverage bev) {
+//void createBeverage(double oz1, double oz2, double oz3, String bevName) {
   if (LoadCell.getData() < 4) {
         Serial.println("No cup detected. Please place cup and try again.");
         lcd.clear();
@@ -228,7 +214,7 @@ void createBeverage(double oz1, double oz2, double oz3, String bevName) {
         return;
       }
   lcd.clear();
-    lcd.print(bevName);
+    lcd.print(bev.name);
     lcd.setCursor(0,1);
     lcd.print("selected.");
     delay(2000);
@@ -249,35 +235,65 @@ void createBeverage(double oz1, double oz2, double oz3, String bevName) {
         resetFunc(); 
       }
   lcd.clear();
-  if (oz1 > 0) {  //if there is an oz1 value dispense that
+  if (bev.ozArr[0] > 0) {  //if there is an oz1 value dispense that
     lcd.setCursor(0, 0);
-    lcd.print("Dispensing " + drink1Name);
+    lcd.print("Dispensing " + bottle1Name);
     lcd.setCursor(0,1);
     lcd.println("# key to cancel.");
     delay(1500);
-    dispense(oz1, 1);
+    dispense(bev.ozArr[0], 1);
   }
 
    
-  if (oz2 > 0) {  //if there is an oz2 value dispense that
+  if (bev.ozArr[1] > 0) {  //if there is an oz2 value dispense that
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print("Dispensing " + drink2Name);
+    lcd.print("Dispensing " + bottle2Name);
     lcd.setCursor(0,1);
     lcd.println("# key to cancel.");
     delay(1500);
-    dispense(oz2, 2);
+    dispense(bev.ozArr[1], 2);
   }
    
    
-  if (oz3 > 0) {  //if there is an oz3 value dispense that
+  if (bev.ozArr[2] > 0) {  //if there is an oz3 value dispense that
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print("Dispensing " + drink3Name);
+    lcd.print("Dispensing " + bottle3Name);
     lcd.setCursor(0,1);
     lcd.println("# key to cancel.");
     delay(1500);
-    dispense(oz3, 3);
+    dispense(bev.ozArr[2], 3);
+  }
+
+  if (bev.ozArr[3] > 0) {  //if there is an oz3 value dispense that
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Dispensing " + bottle4Name);
+    lcd.setCursor(0,1);
+    lcd.println("# key to cancel.");
+    delay(1500);
+    dispense(bev.ozArr[3], 3);
+  }
+
+  if (bev.ozArr[4] > 0) {  //if there is an oz3 value dispense that
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Dispensing " + bottle5Name);
+    lcd.setCursor(0,1);
+    lcd.println("# key to cancel.");
+    delay(1500);
+    dispense(bev.ozArr[4], 3);
+  }
+
+  if (bev.ozArr[5] > 0) {  //if there is an oz3 value dispense that
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Dispensing " + bottle6Name);
+    lcd.setCursor(0,1);
+    lcd.println("# key to cancel.");
+    delay(1500);
+    dispense(bev.ozArr[5], 3);
   }
 
   lcd.clear();
@@ -294,27 +310,27 @@ void decisionTree(char keyVal) {
 
     //dispense drink 1
     if (keyVal == '1') {
-      createBeverage(d1oz1, d1oz2, d1oz3, drink1Name);
+      createBeverage(bev1);
     }
     //dispense drink 2
     else if (keyVal == '2') {
-      createBeverage(d2oz1, d2oz2, d2oz3, drink2Name);
+      createBeverage(bev2);
     }
     //dispense drink 3
     else if (keyVal == '3') {
-      createBeverage(d3oz1, d3oz2, d3oz3, drink3Name);
+      createBeverage(bev3);
     }
     //dispense drink 4
     else if (keyVal == '4') {
-      createBeverage(d4oz1, d4oz2, d4oz3, drink4Name);
+      createBeverage(bev4);
     }
     //dispense drink 5
     else if (keyVal == '5') {
-      createBeverage(d5oz1, d5oz2, d5oz3, drink5Name);
+      createBeverage(bev5);
     }
     //dispense drink 6
     else if (keyVal == '6') {
-      createBeverage(d6oz1, d6oz2, d6oz3, drink6Name);
+      createBeverage(bev6);
     }
     //dispense shot of bottle 1
     else if (keyVal == '7') {
