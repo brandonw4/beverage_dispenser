@@ -16,7 +16,7 @@ class Beverage {
 Beverage::Beverage(String n, double oz1, double oz2, double oz3) {
   name = n;
   ozArr[0] = oz1;
-  ozArr[1] = oz2;
+  ozArr[1] = oz2; 
   ozArr[2] = oz3;
 }
 
@@ -40,14 +40,13 @@ bool printReadyMsg = true; //used to prevent the loop function from spamming lcd
 
 //Weight scale
 HX711_ADC LoadCell(22, 23); 
-long t;
 bool cellDataCall = false;
 const double SCALE_OZ_FACTOR = 20.525;
 
 //4x4 Keypad
 const byte ROWS = 4; 
 const byte COLS = 4; 
-char hexaKeys[ROWS][COLS] = {
+const char hexaKeys[ROWS][COLS] = {
   {'1', '2', '3', 'A'},
   {'4', '5', '6', 'B'},
   {'7', '8', '9', 'C'},
