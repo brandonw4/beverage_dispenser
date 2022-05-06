@@ -41,7 +41,18 @@ bool printReadyMsg = true; //used to prevent the loop function from spamming lcd
 //Weight scale
 HX711_ADC LoadCell(22, 23); 
 bool cellDataCall = false;
-const double SCALE_OZ_FACTOR = 20.525;
+//due to the very small delay with hose liquid lag and motor shutoff,
+//  this factor compensates for that
+const double HOSE_LAG_VALUE = 1.8;
+
+//for single shots only:
+//  to prevent the single shot glass from overfilling, the value on single shot
+//  is reduced to a smaller dispense. This value does not effect beverages.
+const double SINGLE_SHOT_VALUE = 1.2;
+const double SCALE_OZ_FACTOR = 20.525 - HOSE_LAG_VALUE;
+
+
+
 
 //4x4 Keypad
 const byte ROWS = 4; 
@@ -383,7 +394,7 @@ void dispenseShot(int motor, String bottleName) {
     lcd.setCursor(0,1);
     lcd.println("# key to cancel.");
   delay(1500);
-  dispense(1.5, motor);
+  dispense(SINGLE_SHOT_VALUE, motor);
 
   lcd.clear();
     lcd.setCursor(0, 0);
