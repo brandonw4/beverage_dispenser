@@ -53,7 +53,6 @@ const double SCALE_OZ_FACTOR = 20.525 - HOSE_LAG_VALUE;
 
 
 
-
 //4x4 Keypad
 const byte ROWS = 4; 
 const byte COLS = 4; 
@@ -93,6 +92,13 @@ const String bottle4Name = "b4Name";
 const String bottle5Name = "b5Name";
 const String bottle6Name = "b6Name";
 
+//motor pin constants
+const int MOTOR_ONE_PIN = 1;
+const int MOTOR_TWO_PIN = 2;
+const int MOTOR_THREE_PIN = 3;
+const int MOTOR_FOUR_PIN = 4;
+const int MOTOR_FIVE_PIN = 5;
+const int MOTOR_SIX_PIN = 6;
 
 
 
@@ -100,33 +106,32 @@ const String bottle6Name = "b6Name";
 void setup() {
   Serial.begin(9600); 
 
-//LCD control
-lcd.begin(16, 2);
-  lcd.print("Untitled v1");
+  //LCD control
+  lcd.begin(16, 2);
+    lcd.print("Untitled v1");
+    lcd.setCursor(0,1);
+    lcd.print("Brandon Wortman");
+    delay(2000);
+
+  //load cell
+  float calValue = 696;   //calibration value
+  LoadCell.begin(9600);
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("CLEAR THE SCALE!");
   lcd.setCursor(0,1);
-  lcd.print("Brandon Wortman");
-  delay(2000);
+  lcd.print("Calibrating....!");
+  delay(5000);
+  LoadCell.start(2000); //tare precision, can be more precise by adding more seconds of stabilization time
+  LoadCell.setCalFactor(calValue);
 
-//load cell
-float calValue = 696;   //calibration value
-LoadCell.begin(9600);
-lcd.clear();
-lcd.setCursor(0,0);
-lcd.print("CLEAR THE SCALE!");
-lcd.setCursor(0,1);
-lcd.print("Calibrating....!");
-delay(5000);
-LoadCell.start(2000); //tare precision, can be more precise by adding more seconds of stabilization time
-LoadCell.setCalFactor(calValue);
-
-
-//LED control
-  //temp leds for motor
-  pinMode(2, OUTPUT); //red 2
-  pinMode(3, OUTPUT); //blue 3
-  pinMode(4, OUTPUT); //yellow 4
-  
-
+  //Motor Control Outputs
+  pinMode(1, OUTPUT);
+  pinMode(2, OUTPUT);
+  pinMode(3, OUTPUT);
+  pinMode(4, OUTPUT);
+  pinMode(5, OUTPUT);
+  pinMode(6, OUTPUT);
 
 }
 
@@ -170,15 +175,7 @@ void dispense(double oz, int motorNum) {
       currentDispense = LoadCell.getData();
       
       if (customKeypad.getKey() == '#') {
-        Serial.println("##!CANCELLED!##");
-        lcd.clear();
-        lcd.setCursor(0,0);
-        lcd.print("##!CANCELLED!##");
-        lcd.setCursor(0,1);
-        lcd.print("Rebooting...");
-        runMotor(false, 4);
-        delay(3000);
-        resetFunc(); 
+        cancel();
       }
     }
     runMotor(false, motorNum);
@@ -193,15 +190,7 @@ void dispense(double oz, int motorNum) {
       
       //not working
       if (customKeypad.getKey() == '#') {
-        Serial.println("##!CANCELLED!##");
-        lcd.clear();
-        lcd.setCursor(0,0);
-        lcd.print("##!CANCELLED!##");
-        lcd.setCursor(0,1);
-        lcd.print("Rebooting...");
-        runMotor(false, 4);
-        delay(3000);
-        resetFunc(); 
+        cancel();
       }
     }   
     
@@ -233,16 +222,8 @@ void createBeverage(Beverage bev) {
     lcd.println("# key to cancel.");
     delay(4000);
   if (customKeypad.getKey() == '#') {
-        Serial.println("##!CANCELLED!##");
-        lcd.clear();
-        lcd.setCursor(0,0);
-        lcd.print("##!CANCELLED!##");
-        lcd.setCursor(0,1);
-        lcd.print("Rebooting...");
-        runMotor(false, 4);
-        delay(3000);
-        resetFunc(); 
-      }
+    cancel();
+  }
   lcd.clear();
   if (bev.ozArr[0] > 0) {  //if there is an oz1 value dispense that
     lcd.setCursor(0, 0);
@@ -275,7 +256,7 @@ void createBeverage(Beverage bev) {
     dispense(bev.ozArr[2], 3);
   }
 
-  if (bev.ozArr[3] > 0) {  //if there is an oz3 value dispense that
+  if (bev.ozArr[3] > 0) {  //if there is an oz4 value dispense that
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print("Dispensing " + bottle4Name);
@@ -285,7 +266,7 @@ void createBeverage(Beverage bev) {
     dispense(bev.ozArr[3], 3);
   }
 
-  if (bev.ozArr[4] > 0) {  //if there is an oz3 value dispense that
+  if (bev.ozArr[4] > 0) {  //if there is an oz5 value dispense that
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print("Dispensing " + bottle5Name);
@@ -295,7 +276,7 @@ void createBeverage(Beverage bev) {
     dispense(bev.ozArr[4], 3);
   }
 
-  if (bev.ozArr[5] > 0) {  //if there is an oz3 value dispense that
+  if (bev.ozArr[5] > 0) {  //if there is an oz6 value dispense that
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print("Dispensing " + bottle6Name);
@@ -310,7 +291,7 @@ void createBeverage(Beverage bev) {
     lcd.print("Enjoy");
     lcd.setCursor(0, 1);
     lcd.print("responsibly!");
-    runMotor(false, 4); //make sure all 3 motors are off
+    runMotor(false, 0); //make sure all motors are off
     delay(3000);  
   printReadyMsg = true;
   
@@ -359,19 +340,8 @@ void decisionTree(char keyVal) {
     else if (keyVal == 'D') {
       cellDataCall = false;
     }
-    
-
-
-      
-    
     else if (keyVal == '#') {
-      lcd.clear();
-          lcd.setCursor(0,0);
-          lcd.print("##!CANCELLED!##");
-          lcd.setCursor(0,1);
-          lcd.print("Rebooting...");
-          delay(3000);
-          resetFunc(); 
+      cancel();
     }
     
   }
@@ -401,55 +371,85 @@ void dispenseShot(int motor, String bottleName) {
     lcd.print("Enjoy");
     lcd.setCursor(0, 1);
     lcd.print("responsibly!");
-  runMotor(false, 4); //make sure all 3 motors are off
+  runMotor(false, 0); 
   delay(3000);  
   printReadyMsg = true;
 }
   
-void runMotor(bool motorRun, int motorNum) { //implementation of motor controller, motor 4 does not exist but results in a full shutdown of all 3 regardless of bool
+void runMotor(bool motorRun, int motorNum) { //implementation of motor controller, motor 0 does not exist but results in a full shutdown of all 3 regardless of bool
     if(motorNum == 1) {
       if (motorRun) {
-        digitalWrite(2, HIGH);
-        //motor 1 on controller would be here
+      digitalWrite(MOTOR_ONE_PIN, HIGH);
     }
       else {
-      digitalWrite(2, LOW);
-      //motor 1 off controller would be here
+      digitalWrite(MOTOR_ONE_PIN, LOW);
       }
     }
 
     else if(motorNum == 2) {
       if (motorRun) {
-        digitalWrite(3, HIGH);
-        //motor 2 on controller would be here
+        digitalWrite(MOTOR_TWO_PIN, HIGH);
     }
       else {
-      digitalWrite(3, LOW);
-      //motor 2 off controller would be here
+        digitalWrite(MOTOR_TWO_PIN, LOW);
       }
     }
     
     else if(motorNum == 3) {
       if (motorRun) {
-        digitalWrite(4, HIGH);
-        //motor 3 on controller would be here
+        digitalWrite(MOTOR_THREE_PIN, HIGH);
     }
       else {
-      digitalWrite(4, LOW);
-      //motor 3 off controller would be here
+        digitalWrite(MOTOR_THREE_PIN, LOW);
       }
     }
 
     else if(motorNum == 4) {
-      //shutdown all 3 motors
-      digitalWrite(2, LOW);
-      digitalWrite(3, LOW);
-      digitalWrite(4, LOW);
+      if (motorRun) {
+        digitalWrite(MOTOR_FOUR_PIN, HIGH);
     }
-        
+      else {
+        digitalWrite(MOTOR_FOUR_PIN, LOW);
+      }
+    }
 
-
+    else if(motorNum == 5) {
+      if (motorRun) {
+        digitalWrite(MOTOR_FIVE_PIN, HIGH);
+    }
+      else {
+        digitalWrite(MOTOR_FIVE_PIN, LOW);
+      }
+    }
     
+    else if(motorNum == 6) {
+      if (motorRun) {
+        digitalWrite(MOTOR_SIX_PIN, HIGH);
+    }
+      else {
+        digitalWrite(MOTOR_SIX_PIN, LOW);
+      }
+    }
+
+    else if(motorNum == 0) {
+      digitalWrite(MOTOR_ONE_PIN, LOW);
+      digitalWrite(MOTOR_TWO_PIN, LOW);
+      digitalWrite(MOTOR_THREE_PIN, LOW);
+      digitalWrite(MOTOR_FOUR_PIN, LOW);
+      digitalWrite(MOTOR_FIVE_PIN, LOW);
+      digitalWrite(MOTOR_SIX_PIN, LOW);
+    } 
   }
   
+void cancel() {
+  Serial.println("##!CANCELLED!##");
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("##!CANCELLED!##");
+  lcd.setCursor(0,1);
+  lcd.print("Rebooting...");
+  runMotor(false, 0);
+  delay(3000);
+  resetFunc(); 
+}
 
