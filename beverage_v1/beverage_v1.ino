@@ -2,6 +2,7 @@
 #include <HX711_ADC.h>
 #include <Keypad.h>
 #include <LiquidCrystal.h>
+#include <EEPROM.h>
 
 //Beverage Class
 const int maxMixers = 6; //size of mixer arrays
@@ -54,7 +55,7 @@ const double HOSE_LAG_VALUE = 1.8;
 const double SINGLE_SHOT_VALUE = 1.2;
 const double SCALE_OZ_FACTOR = 20.525 - HOSE_LAG_VALUE;
 
-
+const int MOTOR_TIMEOUT_MILLIS = 15000; //how long motor can run before a motor timeout error generated
 
 //4x4 Keypad
 const byte ROWS = 4; 
@@ -71,7 +72,7 @@ Keypad customKeypad = Keypad(makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS)
 
 void(* resetFunc) (void) = 0; //reboot function
 
-void dispense(double oz, int motorNum);
+int dispense(double oz, int motorNum);
 double convertToScaleUnit(double oz);
 void decisionTree(char keyVal);
 void beverageMenu();
@@ -82,6 +83,7 @@ void auth();
 void runMotor(bool motor, int motorNum); //Future~~ Use onboard memory, or switches, to disable motors if a bottle is empty.
 void dispenseShot(int motor, String bottleName);
 void cancel();
+void updateBottleStatus(int mNum, bool status);
 
 //init drinks
 Beverage bev1("testDrink1", true, 1.5, 1.5, 1.5);
@@ -110,6 +112,11 @@ const int MOTOR_THREE_PIN = 3;
 const int MOTOR_FOUR_PIN = 4;
 const int MOTOR_FIVE_PIN = 5;
 const int MOTOR_SIX_PIN = 6;
+
+//FUTURE: NEED TO SAVE THIS IN THE ARDUINO MEMORY SO IT SAVES WITH SHUTDOWN
+const int MOTOR_EEPROM_ADDRESS[6] = {1, 2, 3, 4, 5, 6}; //the pos in the array corresponds to motor num (arr0-5 --> motor1-6)
+//motor/bottle "out of stock status" (bool array, true --> instock, false --> out of stock). Can be manually set in admin menu.
+bool bottle_status[6];
 
 
 
@@ -169,7 +176,7 @@ void loop() {
 
 }
 
-void dispense(double oz, int motorNum) {
+int dispense(double oz, int motorNum) {
     
     double beforeDispense = LoadCell.getData();
     Serial.print("Before dispense: ");
@@ -181,14 +188,17 @@ void dispense(double oz, int motorNum) {
 
     
     Serial.println(LoadCell.getData());
+    int startRunTime = millis();
     while (currentDispense < goalDispense) {
-      LoadCell.update();
-      runMotor(true, motorNum);
-      //Serial.println(LoadCell.getData());
-      currentDispense = LoadCell.getData();
-      
       if (customKeypad.getKey() == '#') {
         cancel();
+      }
+      LoadCell.update();
+      runMotor(true, motorNum);
+      currentDispense = LoadCell.getData();
+      if ((millis() - startRunTime) > MOTOR_TIMEOUT_MILLIS) { //if the motor is running longer than 15 seconds, timeout error 100
+        updateBottleStatus(motorNum, false);
+        return 1;
       }
     }
     runMotor(false, motorNum);
@@ -196,16 +206,18 @@ void dispense(double oz, int motorNum) {
     delay(1000); //check weight again       if it needs more it will dispense another round
     currentDispense = LoadCell.getData();
     while (currentDispense < goalDispense) {
-      LoadCell.update();
-      runMotor(true, motorNum);
-      //Serial.println(LoadCell.getData());
-      currentDispense = LoadCell.getData();
-      
-      //not working
       if (customKeypad.getKey() == '#') {
         cancel();
       }
-    }   
+      LoadCell.update();
+      runMotor(true, motorNum);
+      currentDispense = LoadCell.getData();
+      if ((millis() - startRunTime) > MOTOR_TIMEOUT_MILLIS) { //if the motor is running longer than 15 seconds, timeout error 100
+        updateBottleStatus(motorNum, false);
+        return 1;
+      }
+    }
+    return 0;   
     
   }
 
@@ -224,6 +236,7 @@ void createBeverage(Beverage bev) {
       delay(1700);
       printReadyMsg = true;
   }
+  
   if (LoadCell.getData() < 4) {
         Serial.println("No cup detected. Please place cup and try again.");
         lcd.clear();
@@ -553,3 +566,12 @@ void cancel() {
   resetFunc(); 
 }
 
+void updateBottleStatus(int mNum, bool status) {
+  Serial.print("Updating Motor # ");
+  Serial.print(mNum);
+  Serial.print(" on address ");
+  Serial.print(MOTOR_EEPROM_ADDRESS[mNum]);
+  Serial.print(" to ");
+  Serial.println(status);
+  EEPROM.update(MOTOR_EEPROM_ADDRESS[mNum], status);
+}
