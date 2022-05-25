@@ -7,21 +7,24 @@
 const int maxMixers = 6; //size of mixer arrays
 class Beverage {
     public:
-    Beverage(String n, double oz1, double oz2, double oz3, double oz4, double oz5, double oz6);
-    Beverage(String n, double oz1, double oz2, double oz3);
+    Beverage(String n, bool a, double oz1, double oz2, double oz3, double oz4, double oz5, double oz6);
+    Beverage(String n, bool a, double oz1, double oz2, double oz3);
     double ozArr[maxMixers];
     String name;
+    bool active; //used to enable/disable drinks. Future!!~Use onboard memory to store active or inactive and control via keypad admin menu.
 };
 
-Beverage::Beverage(String n, double oz1, double oz2, double oz3) {
+Beverage::Beverage(String n, bool a, double oz1, double oz2, double oz3) {
   name = n;
+  active = a;
   ozArr[0] = oz1;
   ozArr[1] = oz2; 
   ozArr[2] = oz3;
 }
 
-Beverage::Beverage(String n, double oz1, double oz2, double oz3, double oz4, double oz5, double oz6){
+Beverage::Beverage(String n, bool a, double oz1, double oz2, double oz3, double oz4, double oz5, double oz6){
   name = n;
+  active = a;
   ozArr[0] = oz1;
   ozArr[1] = oz2;
   ozArr[2] = oz3;
@@ -71,17 +74,25 @@ void(* resetFunc) (void) = 0; //reboot function
 void dispense(double oz, int motorNum);
 double convertToScaleUnit(double oz);
 void decisionTree(char keyVal);
+void beverageMenu();
+void shotMenu();
 void createBeverage(Beverage bev);
-void runMotor(bool motor, int motorNum);
+void settingsMenu();
+void auth();
+void runMotor(bool motor, int motorNum); //Future~~ Use onboard memory, or switches, to disable motors if a bottle is empty.
 void dispenseShot(int motor, String bottleName);
+void cancel();
 
 //init drinks
-Beverage bev1("testDrink1", 1.5, 1.5, 1.5);
-Beverage bev2("testDrink2", 1.5, 1.5, 1.5);
-Beverage bev3("testDrink3", 1.5, 1.5, 1.5);
-Beverage bev4("testDrink4", 1.5, 1.5, 1.5);
-Beverage bev5("testDrink5", 1.5, 1.5, 1.5);
-Beverage bev6("testDrink6", 1.5, 1.5, 1.5);
+Beverage bev1("testDrink1", true, 1.5, 1.5, 1.5);
+Beverage bev2("testDrink2", true, 1.5, 1.5, 1.5);
+Beverage bev3("testDrink3", true, 1.5, 1.5, 1.5);
+Beverage bev4("testDrink4", false, 1.5, 1.5, 1.5);
+Beverage bev5("testDrink5", false, 1.5, 1.5, 1.5);
+Beverage bev6("testDrink6", false, 1.5, 1.5, 1.5);
+Beverage bev7("testDrink6", false, 1.5, 1.5, 1.5);
+Beverage bev8("testDrink6", false, 1.5, 1.5, 1.5);
+Beverage bev9("testDrink6", false, 1.5, 1.5, 1.5);
 
 
 //bottles
@@ -135,18 +146,20 @@ void setup() {
 
 }
 
+char keypadIn; //for use in the loop function 
+
 void loop() {
   LoadCell.update();
   if (printReadyMsg) {   //purpose explanation with declaration
     lcd.clear();
       lcd.setCursor(0,0);
-      lcd.print("Place empty cup,");
+      lcd.print("Main Menu");
       lcd.setCursor(0,1);
-      lcd.print("make selection.");
+      lcd.print("Make selection.");
   }
   printReadyMsg = false; //prevent spamming of lcd, after it has printed once
   //keypad input
-  char keypadIn = customKeypad.getKey();
+  keypadIn = customKeypad.getKey();
   decisionTree(keypadIn);
 
   if (cellDataCall) {     //diagnostic: prints scale data to serial console. Controlled by C on, D off.
@@ -196,17 +209,27 @@ void dispense(double oz, int motorNum) {
     
   }
 
-  double convertToScaleUnit(double oz) {
-    return oz * SCALE_OZ_FACTOR;
-  }
+double convertToScaleUnit(double oz) {
+  return oz * SCALE_OZ_FACTOR;
+}
 
 void createBeverage(Beverage bev) {
+  if (!bev.active) {
+    Serial.println("Drink unavailable.");
+    lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("Drink unavailable.");
+      lcd.setCursor(0,1);
+      lcd.print("Return main menu");
+      delay(1700);
+      printReadyMsg = true;
+  }
   if (LoadCell.getData() < 4) {
         Serial.println("No cup detected. Please place cup and try again.");
         lcd.clear();
         lcd.println("No cup detected.");
         lcd.setCursor(0,1);
-        lcd.println("Please try again.");
+        lcd.println("Return main menu");
         delay(1700);
         printReadyMsg = true;
         return;
@@ -297,62 +320,139 @@ void createBeverage(Beverage bev) {
   
 }
 void decisionTree(char keyVal) {
-
-    //dispense drink 1
-    if (keyVal == '1') {
-      createBeverage(bev1);
-    }
-    //dispense drink 2
-    else if (keyVal == '2') {
-      createBeverage(bev2);
-    }
-    //dispense drink 3
-    else if (keyVal == '3') {
-      createBeverage(bev3);
-    }
-    //dispense drink 4
-    else if (keyVal == '4') {
-      createBeverage(bev4);
-    }
-    //dispense drink 5
-    else if (keyVal == '5') {
-      createBeverage(bev5);
-    }
-    //dispense drink 6
-    else if (keyVal == '6') {
-      createBeverage(bev6);
-    }
-    //dispense shot of bottle 1
-    else if (keyVal == '7') {
-      dispenseShot(1, bottle1Name);
-    }
-    //dispense shot of bottle 2
-    else if (keyVal == '8') {
-      dispenseShot(1, bottle2Name);
-    }
-    //dispense shot of bottle 3
-    else if (keyVal == '9') {
-      dispenseShot(1, bottle3Name);
-    }
-    else if (keyVal == 'C') {   //cellDataCall controls print data to console variable
-      cellDataCall = true;
-    }
-    else if (keyVal == 'D') {
-      cellDataCall = false;
-    }
-    else if (keyVal == '#') {
-      cancel();
-    }
+  if (keyVal == 'A') {
+    beverageMenu();
+  }
+  else if (keyVal == 'B') {
+    shotMenu();
+  }
+  else if (keyVal == 'C') {
+    settingsMenu();
+  }
+  else if (keyVal == '#') {
+    cancel();
+  }
     
   }
+
+void beverageMenu() {
+  lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Drink Menu");
+    lcd.setCursor(0,1);
+    lcd.print("Make selection.");
+  char bevKeyVal = customKeypad.waitForKey();
+  Serial.print("DRINK MENU DEBUG bevKeyVal: ");
+  Serial.println(bevKeyVal);
   
+  if (bevKeyVal == '1') {
+    createBeverage(bev1);
+  }
+  else if (bevKeyVal == '2') {
+    createBeverage(bev2);
+  }
+  else if (bevKeyVal == '3') {
+    createBeverage(bev3);
+  }
+  else if (bevKeyVal == '4') {
+    createBeverage(bev4);
+  }
+  else if (bevKeyVal == '5') {
+    createBeverage(bev5);
+  }
+  else if (bevKeyVal == '6') {
+    createBeverage(bev6);
+  }
+  else if (bevKeyVal == '7') {
+    createBeverage(bev7);
+  }
+  else if (bevKeyVal == '8') {
+    createBeverage(bev8);
+  }
+  else if (bevKeyVal == '9') {
+    createBeverage(bev9);
+  }
+  else if (bevKeyVal == '#') {
+    printReadyMsg = true;
+    return;
+  }
+}
+
+void shotMenu() {
+  lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Shots Menu");
+    lcd.setCursor(0,1);
+    lcd.print("Make selection.");
+  char shotKeyVal = customKeypad.waitForKey();
+  Serial.print("SHOT MENU DEBUG shotKeyVal: ");
+  Serial.println(shotKeyVal);
+  
+  if (shotKeyVal == '1') {
+    dispenseShot(1, bottle1Name);
+  }
+  else if (shotKeyVal == '2') {
+    dispenseShot(2, bottle2Name);
+  }
+  else if (shotKeyVal == '3') {
+    dispenseShot(3, bottle3Name);
+  }
+  else if (shotKeyVal == '4') {
+    dispenseShot(4, bottle4Name);
+  }
+  else if (shotKeyVal == '5') {
+    dispenseShot(5, bottle5Name);
+  }
+  else if (shotKeyVal == '6') {
+    dispenseShot(6, bottle6Name);
+  }
+  else if (shotKeyVal == '#'){
+    printReadyMsg = true;
+    return;
+  }
+}
+
+void settingsMenu(){
+  lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Menu");
+    lcd.setCursor(0,1);
+    lcd.print("unavailable.");
+    delay(1500);
+  printReadyMsg = true;
+  return;
+  // lcd.clear();
+  //   lcd.setCursor(0,0);
+  //   lcd.print("ADMIN MENU");
+  //   lcd.setCursor(0,1);
+  //   lcd.print("Enter/Scan PIN");
+}
+
+void auth() {
+  char keypadMultiEntry[4];
+  bool rfidRead = false;
+  lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Auth. Required");
+    lcd.setCursor(0,1);
+    lcd.print("Tap Card/Enter PIN");
+    //in future maybe add a "* to clear." when autoscroll is figured out if possible
+  while(!rfidRead) {
+    keypadMultiEntry[0] = customKeypad.getKey();
+    //check for rfid read
+  }
+  //maybe use getKeys for this. Also consider some circumstances where waitForKeys()
+  
+
+  
+}
 void dispenseShot(int motor, String bottleName) {
   if (LoadCell.getData() < 1) {   //number is smaller due to small plastic solo shot cups
         Serial.println("No cup detected. Please place cup and try again.");
         lcd.clear();
         lcd.println("No cup detected.");
         lcd.setCursor(0,1);
-        lcd.println("Please try again.");
+        lcd.println("Return main menu");
         delay(1700);
         printReadyMsg = true;
         return;
