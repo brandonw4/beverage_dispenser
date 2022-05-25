@@ -3,5 +3,5 @@
     "board": "arduino:avr:mega",
     "sketch": "beverage_v1/beverage_v1.ino",
     "programmer": "arduino:avrispmkii",
-    "port": "/dev/tty.usbmodem21101"
+    "port": "/dev/tty.usbmodem21401"
 }

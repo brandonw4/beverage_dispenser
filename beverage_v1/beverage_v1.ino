@@ -78,7 +78,7 @@ double convertToScaleUnit(double oz);
 void decisionTree(char keyVal);
 void beverageMenu();
 void shotMenu();
-void createBeverage(Beverage bev);
+int createBeverage(Beverage bev);
 void settingsMenu();
 void auth();
 void runMotor(bool motor, int motorNum); //Future~~ Use onboard memory, or switches, to disable motors if a bottle is empty.
@@ -110,7 +110,7 @@ const int MOTOR_FOUR_PIN = 4;
 const int MOTOR_FIVE_PIN = 5;
 const int MOTOR_SIX_PIN = 6;
 
-//FUTURE: NEED TO SAVE THIS IN THE ARDUINO MEMORY SO IT SAVES WITH SHUTDOWN
+
 const int MOTOR_EEPROM_ADDRESS[MOTOR_COUNT] = {1, 2, 3, 4, 5, 6}; //the pos in the array corresponds to motor num (arr0-5 --> motor1-6)
 //motor/bottle "out of stock status" (bool array, true --> instock, false --> out of stock). Can be manually set in admin menu.
 bool bottle_status[MOTOR_COUNT];
@@ -127,6 +127,21 @@ void setup() {
     lcd.setCursor(0,1);
     lcd.print("Brandon Wortman");
     delay(2000);
+
+  Serial.println("Running EEPROM read on all motors to check for out of stock motors.");
+  int eepromResult = -1;
+  for(int i = 0; i < MOTOR_COUNT; i++) {
+    eepromResult = EEPROM.read(MOTOR_EEPROM_ADDRESS[i]);
+    Serial.print("Motor ");
+    Serial.print(i + 1);
+    Serial.print(" eeprom read result: ");
+    Serial.println(eepromResult);
+    if (bottle_status[i] != eepromResult) {
+      bottle_status[i] = eepromResult;
+
+    }
+  }
+  Serial.println("EEPROM Motor Status Read Complete.");
 
   //load cell
   float calValue = 696;   //calibration value
@@ -184,8 +199,7 @@ int dispense(double oz, int motorNum) {
     double currentDispense = beforeDispense;
 
     
-    Serial.println(LoadCell.getData());
-    int startRunTime = millis();
+    long startRunTime = millis();
     while (currentDispense < goalDispense) {
       if (customKeypad.getKey() == '#') {
         cancel();
@@ -194,6 +208,12 @@ int dispense(double oz, int motorNum) {
       runMotor(true, motorNum);
       currentDispense = LoadCell.getData();
       if ((millis() - startRunTime) > MOTOR_TIMEOUT_MILLIS) { //if the motor is running longer than 15 seconds, timeout error 100
+        Serial.print("Debugging Error 100. Current time millis(): ");
+        Serial.print(millis());
+        Serial.print(" and startRunTime: ");
+        Serial.print(startRunTime);
+        Serial.print(". millis() - startRunTime = ");
+        Serial.println(millis() - startRunTime);
         updateBottleStatus(motorNum, false);
         return 1;
       }
@@ -222,7 +242,7 @@ double convertToScaleUnit(double oz) {
   return oz * SCALE_OZ_FACTOR;
 }
 
-void createBeverage(Beverage bev) {
+int createBeverage(Beverage bev) {
   if (!bev.active) {
     Serial.println("Drink unavailable.");
     lcd.clear();
@@ -230,16 +250,34 @@ void createBeverage(Beverage bev) {
       lcd.print("Drink unavailable.");
       lcd.setCursor(0,1);
       lcd.print("Return main menu");
-      delay(1700);
+      delay(2000);
       printReadyMsg = true;
   }
   
+  for (int i = 1; i <= MOTOR_COUNT; i++){
+    if(bottle_status[i - 1] == 0 && bev.ozArr[i - 1] > 0) {
+      Serial.print("ERROR 101. Bottle# ");
+      Serial.println(i);
+      lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("ERROR 101");
+        lcd.setCursor(0,1);
+        lcd.print("Bottle# ");
+        lcd.print(i);
+        delay(2000);
+      printReadyMsg = true;
+      return 1;
+    }
+  }
+
   if (LoadCell.getData() < 4) {
         Serial.println("No cup detected. Please place cup and try again.");
-        lcd.clear();
+        lcd.clear();Serial.print("createBeverage No Cup Detected Error, Weight Value: ");
         lcd.println("No cup detected.");
         lcd.setCursor(0,1);
         lcd.println("Return main menu");
+        Serial.print("createBeverage No Cup Detected Error, Weight Value: ");
+        Serial.println(LoadCell.getData());
         delay(1700);
         printReadyMsg = true;
         return;
@@ -267,7 +305,16 @@ void createBeverage(Beverage bev) {
       lcd.setCursor(0,1);
       lcd.println("# key to cancel.");
     delay(DISPENSE_MSG_TIME);
-    dispense(bev.ozArr[0], i + 1);
+    if (dispense(bev.ozArr[0], i + 1) == 1) {
+      lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("ERROR 100");
+        lcd.setCursor(0, 1);
+        lcd.print("CANCELLING");
+      delay(3000);
+      printReadyMsg = true;
+      return 1;
+    }
     }
   }
 
@@ -279,6 +326,7 @@ void createBeverage(Beverage bev) {
     runMotor(false, 0); //make sure all motors are off
     delay(3000);  
   printReadyMsg = true;
+  return 0;
   
 }
 void decisionTree(char keyVal) {
@@ -377,17 +425,54 @@ void shotMenu() {
 void settingsMenu(){
   lcd.clear();
     lcd.setCursor(0,0);
-    lcd.print("Menu");
+    lcd.print("ADMIN MENU");
     lcd.setCursor(0,1);
-    lcd.print("unavailable.");
-    delay(1500);
+    //lcd.print("Enter/Scan PIN");
+    lcd.print("Selection");
+
+  //FINISH NEED AN AUTH VERIFICATION IF HERE
+  
+  int settingsKeyIn = customKeypad.waitForKey() - '0';
+  char settingsKeyInChar;
+  if (settingsKeyIn == 1) {
+    while(true) {
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("Bottle Status");
+      lcd.setCursor(0,1);
+      lcd.print("Manual Override.");
+    settingsKeyInChar = customKeypad.waitForKey();
+    settingsKeyIn = settingsKeyInChar - '0';
+    if(settingsKeyInChar == '#') {
+      break;
+    }
+    for (int i = 1; i <= MOTOR_COUNT; i++) {
+      if (i == settingsKeyIn) {
+        lcd.clear();
+          lcd.setCursor(0,0);
+          lcd.print("Motor ");
+          lcd.print(settingsKeyIn);
+          lcd.print(" selected.");
+          lcd.setCursor(0,1);
+          lcd.print("*Enable,#Disable");
+        settingsKeyInChar = customKeypad.waitForKey();
+        if (settingsKeyInChar == '*') {
+          updateBottleStatus(i, true);
+          break;
+        }
+        else if (settingsKeyInChar == '#') {
+          updateBottleStatus(i, false);
+          break;
+        }
+
+      }
+    }
+    }
+    
+  }
   printReadyMsg = true;
   return;
-  // lcd.clear();
-  //   lcd.setCursor(0,0);
-  //   lcd.print("ADMIN MENU");
-  //   lcd.setCursor(0,1);
-  //   lcd.print("Enter/Scan PIN");
+
 }
 
 void auth() {
@@ -415,6 +500,8 @@ void dispenseShot(int motor, String bottleName) {
         lcd.println("No cup detected.");
         lcd.setCursor(0,1);
         lcd.println("Return main menu");
+        Serial.print("dispenseShot No Cup Detected Error, Weight Value: ");
+        Serial.println(LoadCell.getData());
         delay(1700);
         printReadyMsg = true;
         return;
@@ -519,8 +606,9 @@ void updateBottleStatus(int mNum, bool status) {
   Serial.print("Updating Motor # ");
   Serial.print(mNum);
   Serial.print(" on address ");
-  Serial.print(MOTOR_EEPROM_ADDRESS[mNum]);
+  Serial.print(MOTOR_EEPROM_ADDRESS[mNum - 1]);
   Serial.print(" to ");
   Serial.println(status);
-  EEPROM.update(MOTOR_EEPROM_ADDRESS[mNum], status);
+  bottle_status[mNum - 1] = status;
+  EEPROM.update(MOTOR_EEPROM_ADDRESS[mNum - 1], status);
 }
