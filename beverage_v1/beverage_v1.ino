@@ -5,12 +5,12 @@
 #include <EEPROM.h>
 
 //Beverage Class
-const int maxMixers = 6; //size of mixer arrays
+const int MOTOR_COUNT = 6;
 class Beverage {
     public:
     Beverage(String n, bool a, double oz1, double oz2, double oz3, double oz4, double oz5, double oz6);
     Beverage(String n, bool a, double oz1, double oz2, double oz3);
-    double ozArr[maxMixers];
+    double ozArr[MOTOR_COUNT];
     String name;
     bool active; //used to enable/disable drinks. Future!!~Use onboard memory to store active or inactive and control via keypad admin menu.
 };
@@ -39,6 +39,7 @@ Beverage::Beverage(String n, bool a, double oz1, double oz2, double oz3, double 
 const int rs = 7, en = 8, d4 = 9, d5 = 10, d6 = 11, d7 = 12;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 bool printReadyMsg = true; //used to prevent the loop function from spamming lcd
+const int DISPENSE_MSG_TIME = 1500;
 
 
 
@@ -98,12 +99,8 @@ Beverage bev9("testDrink6", false, 1.5, 1.5, 1.5);
 
 
 //bottles
-const String bottle1Name = "b1Name";
-const String bottle2Name = "b2Name";
-const String bottle3Name = "b3Name";
-const String bottle4Name = "b4Name";
-const String bottle5Name = "b5Name";
-const String bottle6Name = "b6Name";
+const String BOTTLE_NAMES[MOTOR_COUNT] = {"b1Name", "b2Name", "b3Name", "b4Name", "b5Name", "b6Name"};
+
 
 //motor pin constants
 const int MOTOR_ONE_PIN = 1;
@@ -114,9 +111,9 @@ const int MOTOR_FIVE_PIN = 5;
 const int MOTOR_SIX_PIN = 6;
 
 //FUTURE: NEED TO SAVE THIS IN THE ARDUINO MEMORY SO IT SAVES WITH SHUTDOWN
-const int MOTOR_EEPROM_ADDRESS[6] = {1, 2, 3, 4, 5, 6}; //the pos in the array corresponds to motor num (arr0-5 --> motor1-6)
+const int MOTOR_EEPROM_ADDRESS[MOTOR_COUNT] = {1, 2, 3, 4, 5, 6}; //the pos in the array corresponds to motor num (arr0-5 --> motor1-6)
 //motor/bottle "out of stock status" (bool array, true --> instock, false --> out of stock). Can be manually set in admin menu.
-bool bottle_status[6];
+bool bottle_status[MOTOR_COUNT];
 
 
 
@@ -261,65 +258,17 @@ void createBeverage(Beverage bev) {
     cancel();
   }
   lcd.clear();
-  if (bev.ozArr[0] > 0) {  //if there is an oz1 value dispense that
-    lcd.setCursor(0, 0);
-    lcd.print("Dispensing " + bottle1Name);
-    lcd.setCursor(0,1);
-    lcd.println("# key to cancel.");
-    delay(1500);
-    dispense(bev.ozArr[0], 1);
-  }
-
-   
-  if (bev.ozArr[1] > 0) {  //if there is an oz2 value dispense that
+  
+  for(int i = 0; i < MOTOR_COUNT; i++) { //loop through all beverage oz settings, see if there is a value to dispense
+    if(bev.ozArr[i] > 0) {
     lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("Dispensing " + bottle2Name);
-    lcd.setCursor(0,1);
-    lcd.println("# key to cancel.");
-    delay(1500);
-    dispense(bev.ozArr[1], 2);
-  }
-   
-   
-  if (bev.ozArr[2] > 0) {  //if there is an oz3 value dispense that
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("Dispensing " + bottle3Name);
-    lcd.setCursor(0,1);
-    lcd.println("# key to cancel.");
-    delay(1500);
-    dispense(bev.ozArr[2], 3);
-  }
-
-  if (bev.ozArr[3] > 0) {  //if there is an oz4 value dispense that
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("Dispensing " + bottle4Name);
-    lcd.setCursor(0,1);
-    lcd.println("# key to cancel.");
-    delay(1500);
-    dispense(bev.ozArr[3], 3);
-  }
-
-  if (bev.ozArr[4] > 0) {  //if there is an oz5 value dispense that
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("Dispensing " + bottle5Name);
-    lcd.setCursor(0,1);
-    lcd.println("# key to cancel.");
-    delay(1500);
-    dispense(bev.ozArr[4], 3);
-  }
-
-  if (bev.ozArr[5] > 0) {  //if there is an oz6 value dispense that
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("Dispensing " + bottle6Name);
-    lcd.setCursor(0,1);
-    lcd.println("# key to cancel.");
-    delay(1500);
-    dispense(bev.ozArr[5], 3);
+      lcd.setCursor(0, 0);
+      lcd.print("Dispensing " + BOTTLE_NAMES[i]);
+      lcd.setCursor(0,1);
+      lcd.println("# key to cancel.");
+    delay(DISPENSE_MSG_TIME);
+    dispense(bev.ozArr[0], i + 1);
+    }
   }
 
   lcd.clear();
@@ -402,22 +351,22 @@ void shotMenu() {
   Serial.println(shotKeyVal);
   
   if (shotKeyVal == '1') {
-    dispenseShot(1, bottle1Name);
+    dispenseShot(1, BOTTLE_NAMES[0]);
   }
   else if (shotKeyVal == '2') {
-    dispenseShot(2, bottle2Name);
+    dispenseShot(2, BOTTLE_NAMES[1]);
   }
   else if (shotKeyVal == '3') {
-    dispenseShot(3, bottle3Name);
+    dispenseShot(3, BOTTLE_NAMES[2]);
   }
   else if (shotKeyVal == '4') {
-    dispenseShot(4, bottle4Name);
+    dispenseShot(4, BOTTLE_NAMES[3]);
   }
   else if (shotKeyVal == '5') {
-    dispenseShot(5, bottle5Name);
+    dispenseShot(5, BOTTLE_NAMES[4]);
   }
   else if (shotKeyVal == '6') {
-    dispenseShot(6, bottle6Name);
+    dispenseShot(6, BOTTLE_NAMES[5]);
   }
   else if (shotKeyVal == '#'){
     printReadyMsg = true;
@@ -476,7 +425,7 @@ void dispenseShot(int motor, String bottleName) {
     lcd.print("Shot of " + bottleName);
     lcd.setCursor(0,1);
     lcd.println("# key to cancel.");
-  delay(1500);
+  delay(DISPENSE_MSG_TIME);
   dispense(SINGLE_SHOT_VALUE, motor);
 
   lcd.clear();
