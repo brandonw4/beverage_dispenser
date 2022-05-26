@@ -121,10 +121,16 @@ const int MOTOR_FOUR_PIN = 4;
 const int MOTOR_FIVE_PIN = 5;
 const int MOTOR_SIX_PIN = 6;
 
-
+//EEPROM
 const int MOTOR_EEPROM_ADDRESS[MOTOR_COUNT] = {1, 2, 3, 4, 5, 6}; //the pos in the array corresponds to motor num (arr0-5 --> motor1-6)
+//const int AUTH_PASS_EEPROM_ADDRESS[RFID_PASSCODE_STORAGE_SIZE] = {8, 9, 10, 11};
+const int SETTINGS_AUTH_DRINK_ADDRESS = 12;
+const int SETTINGS_AUTH_SHOTS_ADDRESS = 13;
+//const int AUTH_RFID_EEPROM_ADDRESS[RFID_PASSCODE_STORAGE_SIZE] = {14, 15, 16, 17};
 //motor/bottle "out of stock status" (bool array, true --> instock, false --> out of stock). Can be manually set in admin menu.
 bool bottle_status[MOTOR_COUNT];
+bool auth_drink = false;
+bool auth_shots = false;
 
 
 
@@ -156,6 +162,24 @@ void setup() {
     }
   }
   Serial.println("EEPROM Motor Status Read Complete.");
+
+  Serial.println("Reading EEPROM for auth shots/drink settings.");
+  eepromResult = -1;
+  eepromResult = EEPROM.read(SETTINGS_AUTH_DRINK_ADDRESS);
+  Serial.print("Drink EEPROM Auth Setting: ");
+  Serial.println(eepromResult);
+  if (auth_drink != eepromResult) {
+    auth_drink = eepromResult;
+  }
+  eepromResult = -1;
+  eepromResult = EEPROM.read(SETTINGS_AUTH_SHOTS_ADDRESS);
+  Serial.print("Shots EEPROM Auth Setting: ");
+  Serial.println(eepromResult);
+  if (auth_shots != eepromResult) {
+    auth_shots = eepromResult;
+  }
+  Serial.println("EEPROM AUTH Settings Read Complete.");
+
 
   //load cell
   float calValue = 696;   //calibration value
@@ -360,6 +384,15 @@ void decisionTree(char keyVal) {
   }
 
 void beverageMenu() {
+  if (auth_drink) {
+    if(auth() != 0){
+      lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("AUTH FAILED");
+        delay(DISPENSE_MSG_TIME);
+        return;
+    }
+  }
   lcd.clear();
     lcd.setCursor(0,0);
     lcd.print("Drink Menu");
@@ -403,6 +436,15 @@ void beverageMenu() {
 }
 
 void shotMenu() {
+  if (auth_shots) {
+    if(auth() != 0){
+      lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("AUTH FAILED");
+        delay(DISPENSE_MSG_TIME);
+        return;
+    }
+  }
   lcd.clear();
     lcd.setCursor(0,0);
     lcd.print("Shots Menu");
@@ -437,9 +479,7 @@ void shotMenu() {
 }
 
 void settingsMenu(){
-  int authStatus = -1;
-  authStatus = auth();
-  if(authStatus != 0) {
+  if(auth() != 0) {
     lcd.clear();
       lcd.setCursor(0,0);
       lcd.print("AUTH FAILED");
@@ -455,6 +495,8 @@ void settingsMenu(){
     lcd.setCursor(0,1);
     lcd.print("Selection");
   int settingsKeyIn = customKeypad.waitForKey() - '0';
+  Serial.print("Settings Key In Int Selection: ");
+  Serial.println(settingsKeyIn);
   char settingsKeyInChar;
   if (settingsKeyIn == 1) {
     while(true) {
@@ -489,6 +531,52 @@ void settingsMenu(){
 
       }
     }
+    }
+    
+  }
+  else if (settingsKeyIn == 2) {
+    while(true){
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("AUTH Required For Drink?");
+      lcd.setCursor(0,1);
+      lcd.print("1(yes), 2(no)");
+      settingsKeyInChar = customKeypad.waitForKey();
+      if (settingsKeyInChar == '1') {
+        Serial.println("Enabling Auth on Drink");
+        auth_drink = true;
+        EEPROM.update(SETTINGS_AUTH_DRINK_ADDRESS, auth_drink);
+        break;
+      }
+      else if (settingsKeyInChar == '2') {
+        Serial.println("Disabling Auth on Drink");
+        auth_drink = false;
+        EEPROM.update(SETTINGS_AUTH_DRINK_ADDRESS, auth_drink);
+        break;
+      }
+    }
+    
+  }
+  else if (settingsKeyIn == 3) {
+    while(true){
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("AUTH Required For Shots?");
+      lcd.setCursor(0,1);
+      lcd.print("1(yes), 2(no)");
+      settingsKeyInChar = customKeypad.waitForKey();
+      if (settingsKeyInChar == '1') {
+        Serial.println("Enabling Auth on Shots");
+        auth_shots = true;
+        EEPROM.update(SETTINGS_AUTH_SHOTS_ADDRESS, auth_shots);
+        break;
+      }
+      else if (settingsKeyInChar == '2') {
+        Serial.println("Disabling Auth on Shots");
+        auth_shots = false;
+        EEPROM.update(SETTINGS_AUTH_SHOTS_ADDRESS, auth_shots);
+        break;
+      }
     }
     
   }
@@ -547,7 +635,7 @@ int auth() {
           keyEntry = customKeypad.waitForKey();
           if (keyEntry == '#') {
             printPrompt = true;
-            break;
+            return 1;
           }
           else {
             passcode += String(keyEntry);
