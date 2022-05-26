@@ -1,4 +1,5 @@
-//Libraries
+#include <RFID.h>
+#include <SPI.h>
 #include <HX711_ADC.h>
 #include <Keypad.h>
 #include <LiquidCrystal.h>
@@ -34,6 +35,16 @@ Beverage::Beverage(String n, bool a, double oz1, double oz2, double oz3, double 
   ozArr[5] = oz6;
 }
 
+//RFID reader
+#define pinRST 5
+#define pinSS 2
+RFID rfid(pinSS, pinRST);
+const int RFID_PASSCODE_STORAGE_SIZE = 4;
+const int PASSCODE_LENGTH = 4;
+String rfid_card_storage[RFID_PASSCODE_STORAGE_SIZE] = {"18914013814055"};
+String passcode_storage[RFID_PASSCODE_STORAGE_SIZE] = {"2002"};
+
+
 
 //LCD Display
 const int rs = 7, en = 8, d4 = 9, d5 = 10, d6 = 11, d7 = 12;
@@ -67,7 +78,7 @@ const char hexaKeys[ROWS][COLS] = {
   {'7', '8', '9', 'C'},
   {'*', '0', '#', 'D'}
 };
-byte rowPins[ROWS] = {53, 52, 51, 50}; 
+byte rowPins[ROWS] = {45, 44, 43, 42}; 
 byte colPins[COLS] = {49, 48, 47, 46}; 
 Keypad customKeypad = Keypad(makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS); 
 
@@ -80,7 +91,7 @@ void beverageMenu();
 void shotMenu();
 int createBeverage(Beverage bev);
 void settingsMenu();
-void auth();
+int auth();
 void runMotor(bool motor, int motorNum); //Future~~ Use onboard memory, or switches, to disable motors if a bottle is empty.
 void dispenseShot(int motor, String bottleName);
 void cancel();
@@ -119,7 +130,10 @@ bool bottle_status[MOTOR_COUNT];
 
 
 void setup() {
-  Serial.begin(9600); 
+  Serial.begin(9600);
+  SPI.begin();
+  rfid.init();
+
 
   //LCD control
   lcd.begin(16, 2);
@@ -161,7 +175,7 @@ void setup() {
   pinMode(3, OUTPUT);
   pinMode(4, OUTPUT);
   pinMode(5, OUTPUT);
-  pinMode(6, OUTPUT);
+  //pinMode(6, OUTPUT); REMOVE!!! This is for testing RFID!!!
 
 }
 
@@ -423,15 +437,23 @@ void shotMenu() {
 }
 
 void settingsMenu(){
+  int authStatus = -1;
+  authStatus = auth();
+  if(authStatus != 0) {
+    lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("AUTH FAILED");
+      lcd.setCursor(0,1);
+      lcd.print("Return to main menu");
+      delay(DISPENSE_MSG_TIME);
+    return;
+  }
+  
   lcd.clear();
     lcd.setCursor(0,0);
     lcd.print("ADMIN MENU");
     lcd.setCursor(0,1);
-    //lcd.print("Enter/Scan PIN");
     lcd.print("Selection");
-
-  //FINISH NEED AN AUTH VERIFICATION IF HERE
-  
   int settingsKeyIn = customKeypad.waitForKey() - '0';
   char settingsKeyInChar;
   if (settingsKeyIn == 1) {
@@ -475,20 +497,79 @@ void settingsMenu(){
 
 }
 
-void auth() {
+int auth() {
   char keypadMultiEntry[4];
-  bool rfidRead = false;
-  lcd.clear();
-    lcd.setCursor(0,0);
-    lcd.print("Auth. Required");
-    lcd.setCursor(0,1);
-    lcd.print("Tap Card/Enter PIN");
+  bool authenticate = true;
+  String rfidCard = "";
+  String passcode = "";
+  char keyEntry;
+  bool printPrompt = true;
     //in future maybe add a "* to clear." when autoscroll is figured out if possible
-  while(!rfidRead) {
-    keypadMultiEntry[0] = customKeypad.getKey();
-    //check for rfid read
+  while (authenticate) {
+    if (printPrompt) {
+      lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("Auth. Required");
+        lcd.setCursor(0,1);
+        lcd.print("Tap Card/Enter PIN");
+      printPrompt = false;
+    }
+    if (rfid.isCard()) {
+      /* If so then get its serial number */
+      rfid.readCardSerial();
+      Serial.println("Card detected:");
+      rfidCard = "";
+      for(int i=0;i<5;i++)
+      {
+      rfidCard += String(rfid.serNum[i],DEC);
+      //Serial.print(rfid.serNum[i],HEX); //to print card detail in Hexa Decimal format
+      }
+      Serial.print("RFID Card Read Variable: ");
+      Serial.println(rfidCard);
+      
+      for (int i = 0; i < RFID_PASSCODE_STORAGE_SIZE; i++) {
+        if (rfid_card_storage[i] == rfidCard) {
+          Serial.print("RFID Authenticated: ");
+          Serial.println(rfidCard);
+          return 0;
+        }
+      }
+    }
+
+    if (customKeypad.getKey() == '*') {
+        lcd.clear();
+          lcd.setCursor(0,0);
+          lcd.print("Auth Passcode");
+          lcd.setCursor(0,1);
+          lcd.print("Enter Pin, # to go back");
+          //FINISH On larger display add a 1-4 indicator to show entry of passcode. Also clairify prompt.
+        for (int i = 0; i < PASSCODE_LENGTH; i++) {
+          keyEntry = customKeypad.waitForKey();
+          if (keyEntry == '#') {
+            printPrompt = true;
+            break;
+          }
+          else {
+            passcode += String(keyEntry);
+          }
+
+        }
+        
+        for (int i = 0; i < RFID_PASSCODE_STORAGE_SIZE; i++) {
+          if ((passcode == passcode_storage[i]) && (passcode_storage[i] != "")) {
+            Serial.print("Passcode Authenticated: ");
+            Serial.println(passcode);
+            return 0;
+          }
+        }
+
+        return 0;
+    }
+
+    if (customKeypad.getKey() == '#') {
+      return 1;
+    }
   }
-  //maybe use getKeys for this. Also consider some circumstances where waitForKeys()
   
 
   
