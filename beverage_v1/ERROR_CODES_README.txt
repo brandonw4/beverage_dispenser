@@ -18,7 +18,9 @@ Error Codes:
     FIX:
         Check for Error 100 causes, then reset in admin menu.
 
+102 - No Cup Detected
 
+103 - Failed Authentication IMPLEMENT MESSAGES
 
     
     

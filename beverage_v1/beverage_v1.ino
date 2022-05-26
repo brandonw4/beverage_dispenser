@@ -69,6 +69,10 @@ const double SCALE_OZ_FACTOR = 20.525 - HOSE_LAG_VALUE;
 
 const int MOTOR_TIMEOUT_MILLIS = 15000; //how long motor can run before a motor timeout error generated
 
+const int CHECK_FOR_CUP_TIME = 500; //the time between checking for a drink on the pad (checked multiple times before starting)
+const int CHECK_FOR_CUP_COUNT = 2; //the amount of times a cup will be checked for on the pad before permitting dispensing
+const int CHECK_FOR_CUP_MIN_WEIGHT = 4; //the minimum weight (measured in arbitary value by on the loadcell) to "detect" a cup
+
 //4x4 Keypad
 const byte ROWS = 4; 
 const byte COLS = 4; 
@@ -92,16 +96,17 @@ void shotMenu();
 int createBeverage(Beverage bev);
 void settingsMenu();
 int auth();
-void runMotor(bool motor, int motorNum); //Future~~ Use onboard memory, or switches, to disable motors if a bottle is empty.
+void runMotor(bool motor, int motorNum); 
 void dispenseShot(int motor, String bottleName);
 void cancel();
 void updateBottleStatus(int mNum, bool status);
+int checkForCup();
 
 //init drinks
 Beverage bev1("testDrink1", true, 1.5, 1.5, 1.5);
 Beverage bev2("testDrink2", true, 1.5, 1.5, 1.5);
 Beverage bev3("testDrink3", true, 1.5, 1.5, 1.5);
-Beverage bev4("testDrink4", false, 1.5, 1.5, 1.5);
+Beverage bev4("testDrink4", true, 1.5, 1.5, 1.5);
 Beverage bev5("testDrink5", false, 1.5, 1.5, 1.5);
 Beverage bev6("testDrink6", false, 1.5, 1.5, 1.5);
 Beverage bev7("testDrink6", false, 1.5, 1.5, 1.5);
@@ -219,7 +224,7 @@ void loop() {
   keypadIn = customKeypad.getKey();
   decisionTree(keypadIn);
 
-  if (cellDataCall) {     //diagnostic: prints scale data to serial console. Controlled by C on, D off.
+  if (cellDataCall) {     //diagnostic: controlled in settings menu
     Serial.println(LoadCell.getData());
   }
 
@@ -281,6 +286,10 @@ double convertToScaleUnit(double oz) {
 }
 
 int createBeverage(Beverage bev) { 
+  Serial.print("REMOVE DEBUG: Loadcell in the createBev");
+  Serial.println(LoadCell.getData());
+  Serial.print("REMOVE DEBUG: Loadcell in the createBev");
+  Serial.println(LoadCell.getData());
   if (!bev.active) {
     Serial.println("Drink unavailable.");
     lcd.clear();
@@ -308,7 +317,9 @@ int createBeverage(Beverage bev) {
       return 1;
     }
   }
-
+  /*
+  Serial.print("REMOVE: Before if statement loadcell data");
+  Serial.println(LoadCell.getData());
   if (LoadCell.getData() < 4) {
         Serial.println("No cup detected. Please place cup and try again.");
         lcd.clear();Serial.print("createBeverage No Cup Detected Error, Weight Value: ");
@@ -321,6 +332,14 @@ int createBeverage(Beverage bev) {
         printReadyMsg = true;
         return 1;
       }
+      */
+     if (checkForCup() != 0) {
+       Serial.println("Error 102, createBeverage from checkForCup.");
+       return 1;
+     }
+
+
+  
   lcd.clear();
     lcd.print(bev.name);
     lcd.setCursor(0,1);
@@ -332,7 +351,7 @@ int createBeverage(Beverage bev) {
     lcd.println("# key to cancel.");
     delay(4000);
   if (customKeypad.getKey() == '#') {
-    cancel();
+    return 1;
   }
   lcd.clear();
   
@@ -370,6 +389,10 @@ int createBeverage(Beverage bev) {
 }
 void decisionTree(char keyVal) {
   if (keyVal == 'A') {
+    Serial.print("REMOVE DEBUG: Loadcell in the decisionTree");
+    Serial.println(LoadCell.getData());
+    Serial.print("REMOVE DEBUG: Loadcell in the decisionTree");
+    Serial.println(LoadCell.getData());
     beverageMenu();
   }
   else if (keyVal == 'B') {
@@ -385,6 +408,10 @@ void decisionTree(char keyVal) {
   }
 
 void beverageMenu() {
+  Serial.print("REMOVE DEBUG: Loadcell in the bev menu");
+  Serial.println(LoadCell.getData());
+  Serial.print("REMOVE DEBUG: Loadcell in the bev menu");
+  Serial.println(LoadCell.getData());
   bool printPrompt = true;
   if (auth_drink) {
     if(auth() != 0){
@@ -396,7 +423,10 @@ void beverageMenu() {
         return;
     }
   }
-  
+  //REMOVE
+  Serial.println("2 SECONDS TO TEST CREATE BEVERAGE REMOVE");
+  delay(2000);
+  createBeverage(bev4);
   while(true) {
     if (printPrompt) {
       lcd.clear();
@@ -409,8 +439,12 @@ void beverageMenu() {
     char bevKeyVal = customKeypad.waitForKey();
     Serial.print("DRINK MENU DEBUG bevKeyVal: ");
     Serial.println(bevKeyVal);
-    
+   
     if (bevKeyVal == '1') {
+      Serial.print("REMOVE DEBUG: Loadcell in the bev menu option 1");
+      Serial.println(LoadCell.getData());
+      Serial.print("REMOVE DEBUG: Loadcell in the bev menu option 1");
+      Serial.println(LoadCell.getData());
       if (createBeverage(bev1) == 0) {
         printReadyMsg = true;
         return;
@@ -424,12 +458,17 @@ void beverageMenu() {
       }
       printPrompt = true;
     }
-    else if (bevKeyVal == '3') {
-      if (createBeverage(bev3) == 0) {
-        printReadyMsg = true;
-        return;
-      }
-      printPrompt = true;
+    // else if (bevKeyVal == '3') {
+    //   if (createBeverage(bev3) == 0) {
+    //     printReadyMsg = true;
+    //     return;
+    //   }
+    //   printPrompt = true;
+    // }
+    else if (bevKeyVal = '3') {
+      Serial.print("REMOVE DEBUG: Loadcell in the bev 3");
+      Serial.println(LoadCell.getData());
+      createBeverage(bev3);
     }
     else if (bevKeyVal == '4') {
       if (createBeverage(bev4) == 0) {
@@ -658,15 +697,31 @@ void settingsMenu(){
       printReadyMsg = true;
       return;
     }
-    else if (settingsKeyIn == 'D') {
+    else if (settingsKeyInChar == 'D') {
       lcd.clear();
         lcd.setCursor(0,0);
         lcd.print("Debug Weight Scale");
         lcd.setCursor(0,1);
         lcd.print("In main menu, non saving.");
-        //FINISH
-      printPrompt = true;
-      break;
+        lcd.print(0,2);
+        lcd.print("1(yes), 2(no)");
+      while (true){
+        settingsKeyInChar = customKeypad.waitForKey();
+        if (settingsKeyInChar == '1') {
+          cellDataCall = true;
+          printPrompt = true;
+          break;
+        }
+        else if (settingsKeyInChar == '2') {
+          cellDataCall = false;
+          printPrompt = true;
+          break;
+        }
+        else if (settingsKeyInChar == '#') {
+          printPrompt = true;
+          break;
+      }
+      }
     }
     else {
       lcd.clear();
@@ -873,4 +928,29 @@ void updateBottleStatus(int mNum, bool status) {
   Serial.println(status);
   bottle_status[mNum - 1] = status;
   EEPROM.update(MOTOR_EEPROM_ADDRESS[mNum - 1], status);
+}
+
+int checkForCup() {
+  int weightCount = 0;
+  for (int i = 0; i < CHECK_FOR_CUP_COUNT; i++) {
+    weightCount = 0;
+    for (int j = 0; j < CHECK_FOR_CUP_COUNT; j++) {
+      if (LoadCell.getData() > CHECK_FOR_CUP_MIN_WEIGHT) {
+        weightCount++;
+        Serial.println(LoadCell.getData());
+        delay(500);
+      }
+    }
+    if (weightCount != CHECK_FOR_CUP_COUNT) {
+      Serial.println("Error 102, 1 more check");
+      delay(1000);
+      //FINISH need to create lcd print
+    }
+    else {
+      return 0;
+    }
+    
+  }
+  Serial.println("Error 102, timeout return.");
+  return 1;
 }
