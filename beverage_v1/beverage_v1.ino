@@ -1,8 +1,8 @@
+#include <LiquidCrystal_I2C.h>
 #include <RFID.h>
 #include <SPI.h>
 #include <HX711_ADC.h>
 #include <Keypad.h>
-#include <LiquidCrystal.h>
 #include <EEPROM.h>
 
 //Beverage Class
@@ -45,10 +45,8 @@ String rfid_card_storage[RFID_PASSCODE_STORAGE_SIZE] = {"18914013814055"};
 String passcode_storage[RFID_PASSCODE_STORAGE_SIZE] = {"2002"};
 
 
-
-//LCD Display
-const int rs = 7, en = 8, d4 = 9, d5 = 10, d6 = 11, d7 = 12;
-LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+//LCD 2.0
+LiquidCrystal_I2C lcd(0x27, 20, 4);
 bool printReadyMsg = true; //used to prevent the loop function from spamming lcd
 const int DISPENSE_MSG_TIME = 1500;
 
@@ -90,17 +88,18 @@ void(* resetFunc) (void) = 0; //reboot function
 
 int dispense(double oz, int motorNum);
 double convertToScaleUnit(double oz);
+int createBeverage(Beverage bev);
 void decisionTree(char keyVal);
 void beverageMenu();
 void shotMenu();
-int createBeverage(Beverage bev);
 void settingsMenu();
 int auth();
-void runMotor(bool motor, int motorNum); 
 void dispenseShot(int motor, String bottleName);
+void runMotor(bool motor, int motorNum); 
 void cancel();
 void updateBottleStatus(int mNum, bool status);
 int checkForCup();
+
 
 //init drinks
 Beverage bev1("testDrink1", true, 1.5, 1.5, 1.5);
@@ -147,7 +146,12 @@ void setup() {
 
 
   //LCD control
-  lcd.begin(16, 2);
+  //lcd.begin(16, 2);
+  lcd.init();
+  lcd.init();
+  lcd.backlight();
+  //lcd.begin(20, 4);
+    lcd.setCursor(0,0);
     lcd.print("Untitled v1");
     lcd.setCursor(0,1);
     lcd.print("Brandon Wortman");
@@ -197,6 +201,8 @@ void setup() {
   delay(5000);
   LoadCell.start(2000); //tare precision, can be more precise by adding more seconds of stabilization time
   LoadCell.setCalFactor(calValue);
+  Serial.print("DELETE Testing LoadCell dataSetStatus: ");
+  Serial.println(LoadCell.getDataSetStatus());
 
   //Motor Control Outputs
   pinMode(1, OUTPUT);
@@ -285,12 +291,8 @@ double convertToScaleUnit(double oz) {
   return oz * SCALE_OZ_FACTOR;
 }
 
-int createBeverage(Beverage bev) { 
-  Serial.print("REMOVE DEBUG: Loadcell in the createBev");
-  Serial.println(LoadCell.getData());
-  Serial.print("REMOVE DEBUG: Loadcell in the createBev");
-  Serial.println(LoadCell.getData());
-  if (!bev.active) {
+int createBeverage(Beverage bev) {
+   if (!bev.active) {
     Serial.println("Drink unavailable.");
     lcd.clear();
       lcd.setCursor(0,0);
@@ -299,7 +301,6 @@ int createBeverage(Beverage bev) {
       lcd.print("Return main menu");
       delay(2000);
       printReadyMsg = true;
-      return 1;
   }
   
   for (int i = 1; i <= MOTOR_COUNT; i++){
@@ -317,12 +318,17 @@ int createBeverage(Beverage bev) {
       return 1;
     }
   }
-  /*
+  LoadCell.refreshDataSet(); //TESTING, REVISIT DELETE IF CAUSING CALIBRATION ISSUES
   Serial.print("REMOVE: Before if statement loadcell data");
   Serial.println(LoadCell.getData());
+  for (int i = 0; i < 200; i++) {
+    Serial.println(LoadCell.getData());
+  } 
+  LoadCell.update();
   if (LoadCell.getData() < 4) {
         Serial.println("No cup detected. Please place cup and try again.");
-        lcd.clear();Serial.print("createBeverage No Cup Detected Error, Weight Value: ");
+        lcd.clear();
+        Serial.print("createBeverage No Cup Detected Error, Weight Value: ");
         lcd.println("No cup detected.");
         lcd.setCursor(0,1);
         lcd.println("Return main menu");
@@ -330,13 +336,13 @@ int createBeverage(Beverage bev) {
         Serial.println(LoadCell.getData());
         delay(1700);
         printReadyMsg = true;
-        return 1;
+        return;
       }
-      */
-     if (checkForCup() != 0) {
-       Serial.println("Error 102, createBeverage from checkForCup.");
-       return 1;
-     }
+      
+    //  if (checkForCup() != 0) {
+    //    Serial.println("Error 102, createBeverage from checkForCup.");
+    //    return 1;
+    //  }
 
 
   
@@ -387,6 +393,7 @@ int createBeverage(Beverage bev) {
   return 0;
   
 }
+
 void decisionTree(char keyVal) {
   if (keyVal == 'A') {
     Serial.print("REMOVE DEBUG: Loadcell in the decisionTree");
@@ -408,123 +415,55 @@ void decisionTree(char keyVal) {
   }
 
 void beverageMenu() {
-  Serial.print("REMOVE DEBUG: Loadcell in the bev menu");
-  Serial.println(LoadCell.getData());
-  Serial.print("REMOVE DEBUG: Loadcell in the bev menu");
-  Serial.println(LoadCell.getData());
-  bool printPrompt = true;
   if (auth_drink) {
     if(auth() != 0){
       lcd.clear();
         lcd.setCursor(0,0);
         lcd.print("AUTH FAILED");
         delay(DISPENSE_MSG_TIME);
-        printReadyMsg = true;
         return;
     }
   }
-  //REMOVE
-  Serial.println("2 SECONDS TO TEST CREATE BEVERAGE REMOVE");
-  delay(2000);
-  createBeverage(bev4);
-  while(true) {
-    if (printPrompt) {
-      lcd.clear();
-        lcd.setCursor(0,0);
-        lcd.print("Drink Menu");
-        lcd.setCursor(0,1);
-        lcd.print("Make selection.");
-      printPrompt = false;
-    }
-    char bevKeyVal = customKeypad.waitForKey();
-    Serial.print("DRINK MENU DEBUG bevKeyVal: ");
-    Serial.println(bevKeyVal);
-   
-    if (bevKeyVal == '1') {
-      Serial.print("REMOVE DEBUG: Loadcell in the bev menu option 1");
-      Serial.println(LoadCell.getData());
-      Serial.print("REMOVE DEBUG: Loadcell in the bev menu option 1");
-      Serial.println(LoadCell.getData());
-      if (createBeverage(bev1) == 0) {
-        printReadyMsg = true;
-        return;
-      }
-      printPrompt = true;
-    }
-    else if (bevKeyVal == '2') {
-      if (createBeverage(bev2) == 0) {
-        printReadyMsg = true;
-        return;
-      }
-      printPrompt = true;
-    }
-    // else if (bevKeyVal == '3') {
-    //   if (createBeverage(bev3) == 0) {
-    //     printReadyMsg = true;
-    //     return;
-    //   }
-    //   printPrompt = true;
-    // }
-    else if (bevKeyVal = '3') {
-      Serial.print("REMOVE DEBUG: Loadcell in the bev 3");
-      Serial.println(LoadCell.getData());
-      createBeverage(bev3);
-    }
-    else if (bevKeyVal == '4') {
-      if (createBeverage(bev4) == 0) {
-        printReadyMsg = true;
-        return;
-      }
-      printPrompt = true;
-    }
-    else if (bevKeyVal == '5') {
-      if (createBeverage(bev5) == 0) {
-        printReadyMsg = true;
-        return;
-      }
-      printPrompt = true;
-    }
-    else if (bevKeyVal == '6') {
-      if (createBeverage(bev6) == 0) {
-        printReadyMsg = true;
-        return;
-      }
-      printPrompt = true;
-    }
-    else if (bevKeyVal == '7') {
-      if (createBeverage(bev7) == 0) {
-        printReadyMsg = true;
-        return;
-      }
-      printPrompt = true;
-    }
-    else if (bevKeyVal == '8') {
-      if (createBeverage(bev8) == 0) {
-        printReadyMsg = true;
-        return;
-      }
-      printPrompt = true;
-    }
-    else if (bevKeyVal == '9') {
-      if (createBeverage(bev9) == 0) {
-        printReadyMsg = true;
-        return;
-      }
-      printPrompt = true;
-    }
-    else if (bevKeyVal == '#') {
-      printReadyMsg = true;
-      return;
-    }
-    else {
-      lcd.clear();
-        lcd.setCursor(0,0);
-        lcd.print("Invalid Entry");
-        delay(1000);
-      printPrompt = true;
-    }
-  }
+  lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Drink Menu");
+    lcd.setCursor(0,1);
+    lcd.print("Make selection.");
+  char bevKeyVal = customKeypad.waitForKey();
+  Serial.print("DRINK MENU DEBUG bevKeyVal: ");
+  Serial.println(bevKeyVal);
   
+  if (bevKeyVal == '1') {
+    createBeverage(bev1);
+  }
+  else if (bevKeyVal == '2') {
+    createBeverage(bev2);
+  }
+  else if (bevKeyVal == '3') {
+    createBeverage(bev3);
+  }
+  else if (bevKeyVal == '4') {
+    createBeverage(bev4);
+  }
+  else if (bevKeyVal == '5') {
+    createBeverage(bev5);
+  }
+  else if (bevKeyVal == '6') {
+    createBeverage(bev6);
+  }
+  else if (bevKeyVal == '7') {
+    createBeverage(bev7);
+  }
+  else if (bevKeyVal == '8') {
+    createBeverage(bev8);
+  }
+  else if (bevKeyVal == '9') {
+    createBeverage(bev9);
+  }
+  else if (bevKeyVal == '#') {
+    printReadyMsg = true;
+    return;
+  }
 }
 
 void shotMenu() {
@@ -534,8 +473,7 @@ void shotMenu() {
         lcd.setCursor(0,0);
         lcd.print("AUTH FAILED");
         delay(DISPENSE_MSG_TIME);
-      printReadyMsg = true;  
-      return;
+        return;
     }
   }
   lcd.clear();
@@ -572,7 +510,6 @@ void shotMenu() {
 }
 
 void settingsMenu(){
-  bool printPrompt = true;
   if(auth() != 0) {
     lcd.clear();
       lcd.setCursor(0,0);
@@ -580,24 +517,19 @@ void settingsMenu(){
       lcd.setCursor(0,1);
       lcd.print("Return to main menu");
       delay(DISPENSE_MSG_TIME);
-      printReadyMsg = true;
     return;
   }
-  while(true) {
-    if(printPrompt) {
-      lcd.clear();
-        lcd.setCursor(0,0);
-        lcd.print("ADMIN MENU");
-        lcd.setCursor(0,1);
-        lcd.print("Selection");
-      printPrompt = false;
-    }
-    char settingsKeyInChar = customKeypad.waitForKey();
-    Serial.print("Settings Key In Int Selection: ");
-    Serial.println(settingsKeyInChar);
-    int settingsKeyIn = settingsKeyInChar - '0';
-
-    if (settingsKeyIn == 1) {
+  
+  lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("ADMIN MENU");
+    lcd.setCursor(0,1);
+    lcd.print("Selection");
+  int settingsKeyIn = customKeypad.waitForKey() - '0';
+  Serial.print("Settings Key In Int Selection: ");
+  Serial.println(settingsKeyIn);
+  char settingsKeyInChar;
+  if (settingsKeyIn == 1) {
     while(true) {
       lcd.clear();
       lcd.setCursor(0,0);
@@ -607,7 +539,6 @@ void settingsMenu(){
     settingsKeyInChar = customKeypad.waitForKey();
     settingsKeyIn = settingsKeyInChar - '0';
     if(settingsKeyInChar == '#') {
-      printPrompt = true;
       break;
     }
     for (int i = 1; i <= MOTOR_COUNT; i++) {
@@ -622,12 +553,10 @@ void settingsMenu(){
         settingsKeyInChar = customKeypad.waitForKey();
         if (settingsKeyInChar == '*') {
           updateBottleStatus(i, true);
-          printPrompt = true;
           break;
         }
         else if (settingsKeyInChar == '#') {
           updateBottleStatus(i, false);
-          printPrompt = true;
           break;
         }
 
@@ -636,100 +565,51 @@ void settingsMenu(){
     }
     
   }
-    else if (settingsKeyIn == 2) {
-      while(true){
-        lcd.clear();
-        lcd.setCursor(0,0);
-        lcd.print("AUTH Required For Drink?");
-        lcd.setCursor(0,1);
-        lcd.print("1(yes), 2(no)");
-        settingsKeyInChar = customKeypad.waitForKey();
-        if (settingsKeyInChar == '1') {
-          Serial.println("Enabling Auth on Drink");
-          auth_drink = true;
-          EEPROM.update(SETTINGS_AUTH_DRINK_ADDRESS, auth_drink);
-          printPrompt = true;
-          break;
-        }
-        else if (settingsKeyInChar == '2') {
-          Serial.println("Disabling Auth on Drink");
-          auth_drink = false;
-          EEPROM.update(SETTINGS_AUTH_DRINK_ADDRESS, auth_drink);
-          printPrompt = true;
-          break;
-        }
-        else if (settingsKeyInChar == '#'){
-          printPrompt = true;
-          break;
-        }
-      }
-      
-    }
-    else if (settingsKeyIn == 3) {
-      while(true){
-        lcd.clear();
-        lcd.setCursor(0,0);
-        lcd.print("AUTH Required For Shots?");
-        lcd.setCursor(0,1);
-        lcd.print("1(yes), 2(no)");
-        settingsKeyInChar = customKeypad.waitForKey();
-        if (settingsKeyInChar == '1') {
-          Serial.println("Enabling Auth on Shots");
-          auth_shots = true;
-          EEPROM.update(SETTINGS_AUTH_SHOTS_ADDRESS, auth_shots);
-          printPrompt = true;
-          break;
-        }
-        else if (settingsKeyInChar == '2') {
-          Serial.println("Disabling Auth on Shots");
-          auth_shots = false;
-          EEPROM.update(SETTINGS_AUTH_SHOTS_ADDRESS, auth_shots);
-          printPrompt = true;
-          break;
-        }
-        else if (settingsKeyInChar == '#') {
-          printPrompt = true;
-          break;
-        }
-      }
-    }
-    else if (settingsKeyInChar == '#') {
-      printReadyMsg = true;
-      return;
-    }
-    else if (settingsKeyInChar == 'D') {
+  else if (settingsKeyIn == 2) {
+    while(true){
       lcd.clear();
-        lcd.setCursor(0,0);
-        lcd.print("Debug Weight Scale");
-        lcd.setCursor(0,1);
-        lcd.print("In main menu, non saving.");
-        lcd.print(0,2);
-        lcd.print("1(yes), 2(no)");
-      while (true){
-        settingsKeyInChar = customKeypad.waitForKey();
-        if (settingsKeyInChar == '1') {
-          cellDataCall = true;
-          printPrompt = true;
-          break;
-        }
-        else if (settingsKeyInChar == '2') {
-          cellDataCall = false;
-          printPrompt = true;
-          break;
-        }
-        else if (settingsKeyInChar == '#') {
-          printPrompt = true;
-          break;
+      lcd.setCursor(0,0);
+      lcd.print("AUTH Required For Drink?");
+      lcd.setCursor(0,1);
+      lcd.print("1(yes), 2(no)");
+      settingsKeyInChar = customKeypad.waitForKey();
+      if (settingsKeyInChar == '1') {
+        Serial.println("Enabling Auth on Drink");
+        auth_drink = true;
+        EEPROM.update(SETTINGS_AUTH_DRINK_ADDRESS, auth_drink);
+        break;
       }
+      else if (settingsKeyInChar == '2') {
+        Serial.println("Disabling Auth on Drink");
+        auth_drink = false;
+        EEPROM.update(SETTINGS_AUTH_DRINK_ADDRESS, auth_drink);
+        break;
       }
     }
-    else {
+    
+  }
+  else if (settingsKeyIn == 3) {
+    while(true){
       lcd.clear();
-        lcd.setCursor(0,0);
-        lcd.print("Invalid Entry.");
-        delay(1000);
-      printPrompt = true;
+      lcd.setCursor(0,0);
+      lcd.print("AUTH Required For Shots?");
+      lcd.setCursor(0,1);
+      lcd.print("1(yes), 2(no)");
+      settingsKeyInChar = customKeypad.waitForKey();
+      if (settingsKeyInChar == '1') {
+        Serial.println("Enabling Auth on Shots");
+        auth_shots = true;
+        EEPROM.update(SETTINGS_AUTH_SHOTS_ADDRESS, auth_shots);
+        break;
+      }
+      else if (settingsKeyInChar == '2') {
+        Serial.println("Disabling Auth on Shots");
+        auth_shots = false;
+        EEPROM.update(SETTINGS_AUTH_SHOTS_ADDRESS, auth_shots);
+        break;
+      }
     }
+    
   }
   printReadyMsg = true;
   return;
@@ -738,13 +618,13 @@ void settingsMenu(){
 
 int auth() {
   char keypadMultiEntry[4];
+  bool authenticate = true;
   String rfidCard = "";
   String passcode = "";
   char keyEntry;
-  char menuKey;
   bool printPrompt = true;
     //in future maybe add a "* to clear." when autoscroll is figured out if possible
-  while (true) {
+  while (authenticate) {
     if (printPrompt) {
       lcd.clear();
         lcd.setCursor(0,0);
@@ -774,15 +654,14 @@ int auth() {
         }
       }
     }
-    menuKey = customKeypad.getKey();
-    if (menuKey == '*') {
+
+    if (customKeypad.getKey() == '*') {
         lcd.clear();
           lcd.setCursor(0,0);
           lcd.print("Auth Passcode");
           lcd.setCursor(0,1);
           lcd.print("Enter Pin, # to go back");
           //FINISH On larger display add a 1-4 indicator to show entry of passcode. Also clairify prompt.
-        passcode = "";
         for (int i = 0; i < PASSCODE_LENGTH; i++) {
           keyEntry = customKeypad.waitForKey();
           if (keyEntry == '#') {
@@ -802,14 +681,19 @@ int auth() {
             return 0;
           }
         }
-        return 1;
+
+        return 0;
     }
-    else if (menuKey == '#') {
-      printReadyMsg = true;
+
+    if (customKeypad.getKey() == '#') {
       return 1;
     }
   }
+  
+
+  
 }
+
 void dispenseShot(int motor, String bottleName) {
   if (LoadCell.getData() < 1) {   //number is smaller due to small plastic solo shot cups
         Serial.println("No cup detected. Please place cup and try again.");
@@ -954,3 +838,4 @@ int checkForCup() {
   Serial.println("Error 102, timeout return.");
   return 1;
 }
+
