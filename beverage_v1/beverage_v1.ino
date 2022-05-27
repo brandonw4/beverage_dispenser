@@ -201,16 +201,14 @@ void setup() {
   delay(5000);
   LoadCell.start(2000); //tare precision, can be more precise by adding more seconds of stabilization time
   LoadCell.setCalFactor(calValue);
-  Serial.print("DELETE Testing LoadCell dataSetStatus: ");
-  Serial.println(LoadCell.getDataSetStatus());
 
   //Motor Control Outputs
-  pinMode(1, OUTPUT);
-  pinMode(2, OUTPUT);
-  pinMode(3, OUTPUT);
-  pinMode(4, OUTPUT);
-  pinMode(5, OUTPUT);
-  //pinMode(6, OUTPUT); REMOVE!!! This is for testing RFID!!!
+  pinMode(7, OUTPUT);
+  pinMode(8, OUTPUT);
+  pinMode(9, OUTPUT);
+  pinMode(10, OUTPUT);
+  pinMode(11, OUTPUT);
+  pinMode(12, OUTPUT); 
 
 }
 
@@ -318,12 +316,8 @@ int createBeverage(Beverage bev) {
       return 1;
     }
   }
-  LoadCell.refreshDataSet(); //TESTING, REVISIT DELETE IF CAUSING CALIBRATION ISSUES
-  Serial.print("REMOVE: Before if statement loadcell data");
-  Serial.println(LoadCell.getData());
-  for (int i = 0; i < 200; i++) {
-    Serial.println(LoadCell.getData());
-  } 
+  LoadCell.refreshDataSet(); //BETA Does this effect calibration??
+
   LoadCell.update();
   if (LoadCell.getData() < 4) {
         Serial.println("No cup detected. Please place cup and try again.");
@@ -396,10 +390,6 @@ int createBeverage(Beverage bev) {
 
 void decisionTree(char keyVal) {
   if (keyVal == 'A') {
-    Serial.print("REMOVE DEBUG: Loadcell in the decisionTree");
-    Serial.println(LoadCell.getData());
-    Serial.print("REMOVE DEBUG: Loadcell in the decisionTree");
-    Serial.println(LoadCell.getData());
     beverageMenu();
   }
   else if (keyVal == 'B') {
@@ -814,7 +804,7 @@ void updateBottleStatus(int mNum, bool status) {
   EEPROM.update(MOTOR_EEPROM_ADDRESS[mNum - 1], status);
 }
 
-int checkForCup() {
+int checkForCup() { //finish this implementation and determine if continue use
   int weightCount = 0;
   for (int i = 0; i < CHECK_FOR_CUP_COUNT; i++) {
     weightCount = 0;
