@@ -11,9 +11,11 @@ class Beverage {
     public:
     Beverage(String n, bool a, double oz1, double oz2, double oz3, double oz4, double oz5, double oz6);
     Beverage(String n, bool a, double oz1, double oz2, double oz3);
+    Beverage(String n, bool a, double oz1, double oz2, double oz3, double oz4, double oz5, double oz6, String a1, String a2, String a3, String a4);
     double ozArr[MOTOR_COUNT];
     String name;
-    bool active; //used to enable/disable drinks. Future!!~Use onboard memory to store active or inactive and control via keypad admin menu.
+    bool active;
+    String additionalInstructions[4]; //up to 4 strings avalible to write to lcd screen if needed to provide additional instructions
 };
 
 Beverage::Beverage(String n, bool a, double oz1, double oz2, double oz3) {
@@ -33,6 +35,22 @@ Beverage::Beverage(String n, bool a, double oz1, double oz2, double oz3, double 
   ozArr[3] = oz4;
   ozArr[4] = oz5;
   ozArr[5] = oz6;
+}
+
+Beverage::Beverage(String n, bool a, double oz1, double oz2, double oz3, double oz4, double oz5, double oz6, String a1, String a2, String a3, String a4) {
+  name = n;
+  active = a;
+  ozArr[0] = oz1;
+  ozArr[1] = oz2;
+  ozArr[2] = oz3;
+  ozArr[3] = oz4;
+  ozArr[4] = oz5;
+  ozArr[5] = oz6;
+  additionalInstructions[0] = a1;
+  additionalInstructions[1] = a2;
+  additionalInstructions[2] = a3;
+  additionalInstructions[3] = a4;
+
 }
 
 //RFID reader
@@ -102,7 +120,7 @@ int checkForCup();
 
 
 //init drinks
-Beverage bev1("testDrink1", true, 1.5, 1.5, 1.5);
+Beverage bev1("testDrink1", true, 1.5, 1.5, 1.5, 0, 0 ,0, "Almost done!", "Garnish with orange", "Add splash of coke", "to taste.");
 Beverage bev2("testDrink2", true, 1.5, 1.5, 1.5);
 Beverage bev3("testDrink3", true, 1.5, 1.5, 1.5);
 Beverage bev4("testDrink4", true, 1.5, 1.5, 1.5);
@@ -379,6 +397,18 @@ int createBeverage(Beverage bev) {
       printReadyMsg = true;
       return 1;
     }
+    }
+  }
+  lcd.clear();
+  for (int i = 0; i < 4; i++) {
+    if (bev.additionalInstructions[i] != "") {
+      lcd.setCursor(0,i);
+      lcd.print(bev.additionalInstructions[i]);
+    }
+    if (i == 3) {
+      delay(5500);
+      printReadyMsg = true;
+      return 0;
     }
   }
 
