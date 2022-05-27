@@ -118,12 +118,12 @@ const String BOTTLE_NAMES[MOTOR_COUNT] = {"b1Name", "b2Name", "b3Name", "b4Name"
 
 
 //motor pin constants
-const int MOTOR_ONE_PIN = 1;
-const int MOTOR_TWO_PIN = 2;
-const int MOTOR_THREE_PIN = 3;
-const int MOTOR_FOUR_PIN = 4;
-const int MOTOR_FIVE_PIN = 5;
-const int MOTOR_SIX_PIN = 6;
+const int MOTOR_ONE_PIN = 7;
+const int MOTOR_TWO_PIN = 8;
+const int MOTOR_THREE_PIN = 9;
+const int MOTOR_FOUR_PIN = 10;
+const int MOTOR_FIVE_PIN = 11;
+const int MOTOR_SIX_PIN = 12;
 
 //EEPROM
 const int MOTOR_EEPROM_ADDRESS[MOTOR_COUNT] = {1, 2, 3, 4, 5, 6}; //the pos in the array corresponds to motor num (arr0-5 --> motor1-6)
@@ -152,9 +152,11 @@ void setup() {
   lcd.backlight();
   //lcd.begin(20, 4);
     lcd.setCursor(0,0);
-    lcd.print("Untitled v1");
+    lcd.print("Untitled");
     lcd.setCursor(0,1);
     lcd.print("Brandon Wortman");
+    lcd.setCursor(0,3);
+    lcd.print("Booting up.........!");
     delay(2000);
 
   Serial.println("Running EEPROM read on all motors to check for out of stock motors.");
@@ -195,20 +197,20 @@ void setup() {
   LoadCell.begin(9600);
   lcd.clear();
   lcd.setCursor(0,0);
-  lcd.print("CLEAR THE SCALE!");
-  lcd.setCursor(0,1);
-  lcd.print("Calibrating....!");
+  lcd.print("CLEAR THE SCALE....!");
+  lcd.setCursor(0,2);
+  lcd.print("Calibrating........!");
   delay(5000);
   LoadCell.start(2000); //tare precision, can be more precise by adding more seconds of stabilization time
   LoadCell.setCalFactor(calValue);
 
   //Motor Control Outputs
-  pinMode(7, OUTPUT);
-  pinMode(8, OUTPUT);
-  pinMode(9, OUTPUT);
-  pinMode(10, OUTPUT);
-  pinMode(11, OUTPUT);
-  pinMode(12, OUTPUT); 
+  pinMode(MOTOR_ONE_PIN, OUTPUT);
+  pinMode(MOTOR_TWO_PIN, OUTPUT);
+  pinMode(MOTOR_THREE_PIN, OUTPUT);
+  pinMode(MOTOR_FOUR_PIN, OUTPUT);
+  pinMode(MOTOR_FIVE_PIN, OUTPUT);
+  pinMode(MOTOR_SIX_PIN, OUTPUT); 
 
 }
 
@@ -219,11 +221,15 @@ void loop() {
   if (printReadyMsg) {   //purpose explanation with declaration
     lcd.clear();
       lcd.setCursor(0,0);
-      lcd.print("Main Menu");
+      lcd.print("Main Menu:");
       lcd.setCursor(0,1);
-      lcd.print("Make selection.");
+      lcd.print("Make a selection.");
+      lcd.setCursor(0,2);
+      lcd.print("A) Drink Menu");
+      lcd.setCursor(0,3);
+      lcd.print("B) Shots Menu");
+    printReadyMsg = false; //prevent spamming of lcd, after it has printed once
   }
-  printReadyMsg = false; //prevent spamming of lcd, after it has printed once
   //keypad input
   keypadIn = customKeypad.getKey();
   decisionTree(keypadIn);
@@ -291,10 +297,10 @@ double convertToScaleUnit(double oz) {
 
 int createBeverage(Beverage bev) {
    if (!bev.active) {
-    Serial.println("Drink unavailable.");
+    Serial.println("Drink disabled.");
     lcd.clear();
       lcd.setCursor(0,0);
-      lcd.print("Drink unavailable.");
+      lcd.print("Drink disabled.");
       lcd.setCursor(0,1);
       lcd.print("Return main menu");
       delay(2000);
@@ -409,16 +415,24 @@ void beverageMenu() {
     if(auth() != 0){
       lcd.clear();
         lcd.setCursor(0,0);
-        lcd.print("AUTH FAILED");
+        lcd.print("Authorization Failed");
+        lcd.setCursor(0,1);
+        lcd.print("Returning to");
+        lcd.setCursor(0,2);
+        lcd.print("main menu.");
         delay(DISPENSE_MSG_TIME);
         return;
     }
   }
   lcd.clear();
     lcd.setCursor(0,0);
-    lcd.print("Drink Menu");
+    lcd.print("Drink Menu..........");
     lcd.setCursor(0,1);
-    lcd.print("Make selection.");
+    lcd.print("Make selection......");
+    lcd.setCursor(0,2);
+    lcd.print("Check paper menu for");
+    lcd.setCursor(0,3);
+    lcd.print("available drinks.");
   char bevKeyVal = customKeypad.waitForKey();
   Serial.print("DRINK MENU DEBUG bevKeyVal: ");
   Serial.println(bevKeyVal);
@@ -503,9 +517,11 @@ void settingsMenu(){
   if(auth() != 0) {
     lcd.clear();
       lcd.setCursor(0,0);
-      lcd.print("AUTH FAILED");
+      lcd.print("Authorization Failed");
       lcd.setCursor(0,1);
-      lcd.print("Return to main menu");
+      lcd.print("Returning to");
+      lcd.setCursor(0,2);
+      lcd.print("main menu.");
       delay(DISPENSE_MSG_TIME);
     return;
   }
@@ -618,9 +634,13 @@ int auth() {
     if (printPrompt) {
       lcd.clear();
         lcd.setCursor(0,0);
-        lcd.print("Auth. Required");
+        lcd.print("Authorization");
         lcd.setCursor(0,1);
-        lcd.print("Tap Card/Enter PIN");
+        lcd.print("required.");
+        lcd.setCursor(0,2);
+        lcd.print("Tap card or * for");
+        lcd.setCursor(0,3);
+        lcd.print("passcode.");
       printPrompt = false;
     }
     if (rfid.isCard()) {
@@ -648,10 +668,15 @@ int auth() {
     if (customKeypad.getKey() == '*') {
         lcd.clear();
           lcd.setCursor(0,0);
-          lcd.print("Auth Passcode");
+          lcd.print("Auth. Passcode");
           lcd.setCursor(0,1);
-          lcd.print("Enter Pin, # to go back");
+          lcd.print("Enter Pin.");
+          lcd.setCursor(0,2);
+          lcd.print("# to return.");
           //FINISH On larger display add a 1-4 indicator to show entry of passcode. Also clairify prompt.
+        lcd.setCursor(0,3);
+        lcd.print("----");
+        lcd.setCursor(0,3);
         for (int i = 0; i < PASSCODE_LENGTH; i++) {
           keyEntry = customKeypad.waitForKey();
           if (keyEntry == '#') {
@@ -660,6 +685,7 @@ int auth() {
           }
           else {
             passcode += String(keyEntry);
+            lcd.print("*");
           }
 
         }
