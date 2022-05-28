@@ -117,6 +117,7 @@ void runMotor(bool motor, int motorNum);
 void cancel();
 void updateBottleStatus(int mNum, bool status);
 int checkForCup();
+int userCheck();
 
 
 //init drinks
@@ -885,3 +886,79 @@ int checkForCup() { //finish this implementation and determine if continue use
   return 1;
 }
 
+int userCheck() {
+  char userKey;
+  char user4DigitArr[4];
+  char userPhone[10];
+  lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Enter Last 4 Digits");
+    lcd.setCursor(0,1);
+    lcd.print("of Phone #.");
+    lcd.setCursor(0,2);
+    lcd.print("* Undo. # Cancel.");
+  
+  lcd.setCursor(0,3);
+  lcd.print("----");
+  lcd.setCursor(0,3);
+  for (int i = 0; i < 4; i++) {
+    userKey = customKeypad.waitForKey();
+    if (userKey == '#') {
+      return 1;
+    }
+    else if (userKey == '*' && i != 0) {
+      user4DigitArr[i - 1] = (char)0;
+      lcd.setCursor(i - 1,3);
+      lcd.print("-");
+      lcd.setCursor(0,3);
+    }
+    else {
+      user4DigitArr[i] = userKey;
+      lcd.print(userKey);
+    }
+  }
+
+  //TEMP IF STATEMENT FINISH: If there is no phone number with those 4 digits in the text file, register the user
+  if (true) {
+    lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("Phone Digits New");
+      lcd.setCursor(0,1);
+      lcd.print("Please enter full phone #");
+      lcd.setCursor(0,2);
+      lcd.print("(Only required once)");
+      lcd.setCursor(0,3);
+      lcd.print("----------");
+
+    lcd.setCursor(0,3);
+    for (int i = 0; i < 10; i++) {
+      userKey = customKeypad.waitForKey();
+      if (userKey == '#') {
+        return 1;
+      }
+      else if (userKey == '*' && i != 0) {
+        userPhone[i - 1] = (char)0;
+        lcd.setCursor(i - 1,3);
+        lcd.print("-");
+        lcd.setCursor(0,3);
+      }
+      else {
+        userPhone[i] = userKey;
+        lcd.print(userKey);
+      }
+    }
+    //write phone and time to sd card
+    lcd.clear();
+      lcd.setCursor(0,1);
+      lcd.print("Registered.");
+      lcd.setCursor(0,2);
+      lcd.print("Thank you!");
+      delay(1500);
+  }
+  
+  else { //use the found phone number and write that phone number and time to sd card
+    //write phone and time to sd card
+  }
+
+  return 0;
+}
