@@ -11,11 +11,11 @@ class Beverage {
     public:
     Beverage(String n, bool a, double oz1, double oz2, double oz3, double oz4, double oz5, double oz6);
     Beverage(String n, bool a, double oz1, double oz2, double oz3);
-    Beverage(String n, bool a, double oz1, double oz2, double oz3, double oz4, double oz5, double oz6, String a1, String a2, String a3, String a4);
+    Beverage(String n, bool a, double oz1, double oz2, double oz3, double oz4, double oz5, double oz6, String a1, String a2, String a3);
     double ozArr[MOTOR_COUNT];
     String name;
     bool active;
-    String additionalInstructions[4]; //up to 4 strings avalible to write to lcd screen if needed to provide additional instructions
+    String additionalInstructions[3]; //up to 3 strings avalible to write to lcd screen if needed to provide additional instructions //changed to 3 for allow price
 };
 
 Beverage::Beverage(String n, bool a, double oz1, double oz2, double oz3) {
@@ -37,7 +37,7 @@ Beverage::Beverage(String n, bool a, double oz1, double oz2, double oz3, double 
   ozArr[5] = oz6;
 }
 
-Beverage::Beverage(String n, bool a, double oz1, double oz2, double oz3, double oz4, double oz5, double oz6, String a1, String a2, String a3, String a4) {
+Beverage::Beverage(String n, bool a, double oz1, double oz2, double oz3, double oz4, double oz5, double oz6, String a1, String a2, String a3) {
   name = n;
   active = a;
   ozArr[0] = oz1;
@@ -49,7 +49,6 @@ Beverage::Beverage(String n, bool a, double oz1, double oz2, double oz3, double 
   additionalInstructions[0] = a1;
   additionalInstructions[1] = a2;
   additionalInstructions[2] = a3;
-  additionalInstructions[3] = a4;
 
 }
 
@@ -121,7 +120,7 @@ int userCheck();
 
 
 //init drinks
-Beverage bev1("testDrink1", true, 1.5, 1.5, 1.5, 0, 0 ,0, "Almost done!", "Garnish with orange", "Add splash of coke", "to taste.");
+Beverage bev1("testDrink1", true, 1.5, 1.5, 1.5, 0, 0 ,0, "Almost done!", "Garnish with orange", "Add splash of coke");
 Beverage bev2("testDrink2", true, 1.5, 1.5, 1.5);
 Beverage bev3("testDrink3", true, 1.5, 1.5, 1.5);
 Beverage bev4("testDrink4", true, 1.5, 1.5, 1.5);
@@ -134,6 +133,7 @@ Beverage bev9("testDrink6", false, 1.5, 1.5, 1.5);
 
 //bottles
 const String BOTTLE_NAMES[MOTOR_COUNT] = {"b1Name", "b2Name", "b3Name", "b4Name", "b5Name", "b6Name"};
+const double BOTTLE_COSTS[MOTOR_COUNT] = {1.6, 1.7, 1.8, 1.9, 2.2, 3.2}; //measured in price per ounce. Indexed at motor index
 
 
 //motor pin constants
@@ -315,6 +315,8 @@ double convertToScaleUnit(double oz) {
 }
 
 int createBeverage(Beverage bev) {
+   double bevTotalPrice = 0.0;
+
    if (!bev.active) {
     Serial.println("Drink disabled.");
     lcd.clear();
@@ -362,8 +364,6 @@ int createBeverage(Beverage bev) {
     //    Serial.println("Error 102, createBeverage from checkForCup.");
     //    return 1;
     //  }
-
-
   
   lcd.clear();
     lcd.print(bev.name);
@@ -398,15 +398,25 @@ int createBeverage(Beverage bev) {
       printReadyMsg = true;
       return 1;
     }
+      bevTotalPrice += bev.ozArr[i] * BOTTLE_COSTS[i];
+      Serial.print("Loop Drink Index: ");
+      Serial.print(i);
+      Serial.print(" Price running total: ");
+      Serial.println(bevTotalPrice);
     }
   }
   lcd.clear();
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 3; i++) {
     if (bev.additionalInstructions[i] != "") {
       lcd.setCursor(0,i);
       lcd.print(bev.additionalInstructions[i]);
     }
-    if (i == 3) {
+    
+    if (i == 2) {
+      lcd.setCursor(0,2);
+      lcd.print("This drink cost ");
+      lcd.print(bevTotalPrice);
+      lcd.print(" to make.");
       delay(5500);
       printReadyMsg = true;
       return 0;
@@ -962,3 +972,4 @@ int userCheck() {
 
   return 0;
 }
+
