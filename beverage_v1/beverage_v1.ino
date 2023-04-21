@@ -412,7 +412,8 @@ int createBeverage(Beverage bev) {
       lcd.print(bev.additionalInstructions[i]);
     }
     
-    if (i == 2) {
+    if (false) {
+    //if (i == 2) {
       lcd.setCursor(0,2);
       lcd.print("This drink cost ");
       lcd.print(bevTotalPrice);
